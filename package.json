@@ -1,0 +1,19 @@
+{
+  "author": "Florian Keller <github@floriankeller.de>",
+  "devDependencies": {
+    "prettier": "1.10.2",
+    "rimraf": "2.6.2",
+    "typescript": "2.7.1"
+  },
+  "license": "MIT",
+  "main": "dist/index.js",
+  "name": "libsodium-type-generator",
+  "repository": "https://github.com/ffflorian/libsodium-type-generator.git",
+  "scripts": {
+    "clear": "rimraf dist",
+    "build": "yarn clear && tsc",
+    "install": "git submodule init && git submodule update",
+    "start": "node dist/index.js"
+  },
+  "version": "1.0.0"
+}

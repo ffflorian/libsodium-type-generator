@@ -19,7 +19,7 @@ export interface libsodiumSymbol {
       or_else_throw: string;
     }
   ];
-  dependencies: Array<string>;
+  dependencies?: Array<string>;
   inputs?: Array<libsodiumSymbolIO>;
   name: string;
   noOutputFormat?: boolean;
@@ -104,6 +104,14 @@ export default class TypeGenerator {
       )
     );
 
+    functions.push({
+      name: 'ready',
+      noOutputFormat: true,
+      return: 'Promise<void>',
+      target: '',
+      type: 'function',
+    });
+
     return functions;
   }
 
@@ -163,7 +171,7 @@ export default class TypeGenerator {
       return parameters;
     };
 
-    let data = 'declare namespace libsodium {\n';
+    let data = `declare module 'libsodium-wrappers-sumo' {\n`;
     data += `  type OutputFormat = 'uint8array' | 'text' | 'hex' | 'base64';\n\n`;
 
     Object.keys(this.genericTypes).forEach(type => {

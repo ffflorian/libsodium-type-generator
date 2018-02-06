@@ -8,6 +8,9 @@
     "rimraf": "2.6.2",
     "typescript": "2.7.1"
   },
+  "files": [
+    "dist"
+  ],
   "license": "MIT",
   "main": "dist/index.js",
   "name": "libsodium-type-generator",
@@ -19,5 +22,6 @@
     "prettier": "prettier --single-quote --write src/*.ts",
     "start": "node dist/index.js"
   },
+  "types": "dist/TypeGenerator.d.ts",
   "version": "1.0.0"
 }

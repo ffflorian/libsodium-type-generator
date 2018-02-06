@@ -25,7 +25,7 @@ export interface libsodiumSymbol {
   noOutputFormat?: boolean;
   outputs?: Array<libsodiumSymbolIO>;
   return?: string;
-  target: string;
+  target?: string;
   type: 'function';
 }
 
@@ -53,6 +53,24 @@ export default class TypeGenerator {
     SecretBox: [
       { name: 'cipher', type: 'Uint8Array' },
       { name: 'mac', type: 'Uint8Array' }
+    ],
+    base64_variant: [
+      {
+        name: 'ORIGINAL',
+        type: '1 | 0'
+      },
+      {
+        name: 'ORIGINAL_NO_PADDING',
+        type: '3 | 0'
+      },
+      {
+        name: 'URLSAFE',
+        type: '5 | 0'
+      },
+      {
+        name: 'URLSAFE_NO_PADDING',
+        type: '7 | 0'
+      }
     ],
     generichash_state_address: [{ name: 'name', type: 'string' }],
     onetimeauth_state_address: [{ name: 'name', type: 'string' }],
@@ -116,13 +134,204 @@ export default class TypeGenerator {
       )
     );
 
-    symbols.push({
-      name: 'ready',
-      noOutputFormat: true,
-      return: 'Promise<void>',
-      target: '',
-      type: 'function'
-    });
+    symbols.push(
+      {
+        inputs: [
+          {
+            name: 'a',
+            type: 'Uint8Array'
+          },
+
+          {
+            name: 'b',
+            type: 'Uint8Array'
+          }
+        ],
+        name: 'add',
+        noOutputFormat: true,
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'b1',
+            type: 'Uint8Array'
+          },
+          {
+            name: 'b2',
+            type: 'Uint8Array'
+          }
+        ],
+        name: 'compare',
+        noOutputFormat: true,
+        return: 'number',
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'variant',
+            type: 'base64_variant'
+          }
+        ],
+        name: 'from_base64',
+        noOutputFormat: true,
+        return: 'Uint8Array',
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'input',
+            type: 'string'
+          }
+        ],
+        name: 'from_hex',
+        noOutputFormat: true,
+        return: 'string',
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'str',
+            type: 'string'
+          }
+        ],
+        name: 'from_string',
+        noOutputFormat: true,
+        return: 'Uint8Array',
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'bytes',
+            type: 'Uint8Array'
+          }
+        ],
+        name: 'increment',
+        noOutputFormat: true,
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'bytes',
+            type: 'Uint8Array'
+          }
+        ],
+        name: 'is_zero',
+        noOutputFormat: true,
+        return: 'boolean',
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'b1',
+            type: 'Uint8Array'
+          },
+          {
+            name: 'b2',
+            type: 'Uint8Array'
+          }
+        ],
+        name: 'memcmp',
+        noOutputFormat: true,
+        return: 'boolean',
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'bytes',
+            type: 'Uint8Array'
+          }
+        ],
+        name: 'memzero',
+        noOutputFormat: true,
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'buf',
+            type: 'Uint8Array'
+          },
+          {
+            name: 'blocksize',
+            type: 'number'
+          }
+        ],
+        name: 'pad',
+        noOutputFormat: true,
+        return: 'Uint8Array',
+        type: 'function'
+      },
+      {
+        name: 'ready',
+        noOutputFormat: true,
+        return: 'Promise<void>',
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'input',
+            type: 'string | Uint8Array'
+          },
+          {
+            name: 'variant',
+            type: 'base64_variant'
+          }
+        ],
+        name: 'to_base64',
+        noOutputFormat: true,
+        return: 'string',
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'input',
+            type: 'string | Uint8Array'
+          }
+        ],
+        name: 'to_hex',
+        noOutputFormat: true,
+        return: 'string',
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'bytes',
+            type: 'Uint8Array'
+          }
+        ],
+        name: 'to_string',
+        noOutputFormat: true,
+        return: 'string',
+        type: 'function'
+      },
+      {
+        inputs: [
+          {
+            name: 'buf',
+            type: 'Uint8Array'
+          },
+          {
+            name: 'blocksize',
+            type: 'number'
+          }
+        ],
+        name: 'unpad',
+        noOutputFormat: true,
+        return: 'Uint8Array',
+        type: 'function'
+      }
+    );
 
     return symbols.sort(
       (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)

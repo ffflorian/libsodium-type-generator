@@ -35,8 +35,6 @@ export interface libsodiumGenericTypes {
 
 export default class TypeGenerator {
   private constants: Array<libsodiumConstant>;
-  private libsodiumBase: string;
-  public outputFile: string;
 
   private genericTypes: libsodiumGenericTypes = {
     CryptoBox: [
@@ -65,9 +63,11 @@ export default class TypeGenerator {
     sign_state_address: [{ name: 'name', type: 'string' }]
   };
 
-  constructor(libsodiumBase?: string, outputFile?: string) {
-    this.libsodiumBase = path.join(__dirname, '..', 'libsodium.js');
-    this.outputFile = path.join(__dirname, '..', 'libsodium.d.ts');
+  constructor(private libsodiumBase?: string, public outputFile?: string) {
+    this.libsodiumBase =
+      libsodiumBase || path.join(__dirname, '..', 'libsodium.js');
+    this.outputFile =
+      outputFile || path.join(__dirname, '..', 'libsodium.d.ts');
   }
 
   private readdirAsync(path: string): Promise<Array<string>> {

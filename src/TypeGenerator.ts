@@ -39,30 +39,30 @@ export default class TypeGenerator {
   public outputFile: string;
 
   private genericTypes: libsodiumGenericTypes = {
+    CryptoBox: [
+      { name: 'ciphertext', type: 'Uint8Array' },
+      { name: 'mac', type: 'Uint8Array' }
+    ],
+    CryptoKX: [
+      { name: 'sharedRx', type: 'Uint8Array' },
+      { name: 'sharedTx', type: 'Uint8Array' }
+    ],
+    KeyPair: [
+      { name: 'privateKey', type: 'string | Uint8Array' },
+      { name: 'publicKey', type: 'string | Uint8Array' },
+      { name: 'keyType', type: `'curve25519' | 'ed25519' | 'x25519'` }
+    ],
+    SecretBox: [
+      { name: 'cipher', type: 'Uint8Array' },
+      { name: 'mac', type: 'Uint8Array' }
+    ],
     generichash_state_address: [{ name: 'name', type: 'string' }],
     onetimeauth_state_address: [{ name: 'name', type: 'string' }],
     state_address: [{ name: 'name', type: 'string' }],
     secretstream_xchacha20poly1305_state_address: [
       { name: 'name', type: 'string' }
     ],
-    sign_state_address: [{ name: 'name', type: 'string' }],
-    KeyPair: [
-      { name: 'publicKey', type: 'string | Uint8Array' },
-      { name: 'privateKey', type: 'string | Uint8Array' },
-      { name: 'keyType', type: `'curve25519' | 'ed25519' | 'x25519'` }
-    ],
-    CryptoBox: [
-      { name: 'ciphertext', type: 'Uint8Array' },
-      { name: 'mac', type: 'Uint8Array' },
-    ],
-    SecretBox: [
-      { name: 'cipher', type: 'Uint8Array' },
-      { name: 'mac', type: 'Uint8Array' },
-    ],
-    CryptoKX: [
-      { name: 'sharedRx', type: 'Uint8Array' },
-      { name: 'sharedTx', type: 'Uint8Array' },
-    ],
+    sign_state_address: [{ name: 'name', type: 'string' }]
   };
 
   constructor(libsodiumBase?: string, outputFile?: string) {
@@ -121,18 +121,24 @@ export default class TypeGenerator {
       noOutputFormat: true,
       return: 'Promise<void>',
       target: '',
-      type: 'function',
+      type: 'function'
     });
 
-    return symbols.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+    return symbols.sort(
+      (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
+    );
   }
 
   private async getConstants(): Promise<Array<libsodiumConstant>> {
     const filePath = path.join(this.libsodiumBase, 'wrapper', 'constants.json');
 
-    const constants = await this.readFileAsync<Array<libsodiumConstant>>(filePath);
+    const constants = await this.readFileAsync<Array<libsodiumConstant>>(
+      filePath
+    );
 
-    return constants.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+    return constants.sort(
+      (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
+    );
   }
 
   private convertType(type: string): string {
@@ -160,7 +166,9 @@ export default class TypeGenerator {
     if (type.startsWith('_format_output({mac: mac, cipher: cipher}')) {
       return 'SecretBox';
     }
-    if (type.startsWith('_format_output({sharedRx: sharedRx, sharedTx: sharedTx}')) {
+    if (
+      type.startsWith('_format_output({sharedRx: sharedRx, sharedTx: sharedTx}')
+    ) {
       return 'CryptoKX';
     }
     if (type === 'random_value') {

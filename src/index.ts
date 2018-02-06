@@ -7,7 +7,11 @@ generator
   .then(() =>
     fs.readFile(generator.outputFile, (err, data) => {
       if (!err) {
-        console.log(`Success! The type file is now available at "${generator.outputFile}."`);
+        console.log(
+          `Success! The type file is now available at "${
+            generator.outputFile
+          }."`
+        );
       } else {
         throw err;
       }

@@ -49,13 +49,25 @@ export default class TypeGenerator {
     KeyPair: [
       { name: 'publicKey', type: 'string | Uint8Array' },
       { name: 'privateKey', type: 'string | Uint8Array' },
-      { name: 'keyType', type: `'ed25519'` }
-    ]
+      { name: 'keyType', type: `'curve25519' | 'ed25519' | 'x25519'` }
+    ],
+    CryptoBox: [
+      { name: 'ciphertext', type: 'Uint8Array' },
+      { name: 'mac', type: 'Uint8Array' },
+    ],
+    SecretBox: [
+      { name: 'cipher', type: 'Uint8Array' },
+      { name: 'mac', type: 'Uint8Array' },
+    ],
+    CryptoKX: [
+      { name: 'sharedRx', type: 'Uint8Array' },
+      { name: 'sharedRx', type: 'Uint8Array' },
+    ],
   };
 
   constructor(libsodiumBase?: string, outputFile?: string) {
     this.libsodiumBase = path.join(__dirname, '..', 'libsodium.js');
-    this.outputFile = path.join(__dirname, 'libsodium.d.ts');
+    this.outputFile = path.join(__dirname, '..', 'libsodium.d.ts');
   }
 
   private readdirAsync(path: string): Promise<Array<string>> {
@@ -98,13 +110,13 @@ export default class TypeGenerator {
     const symbolPath = path.join(this.libsodiumBase, 'wrapper', 'symbols');
     const symbolFiles = await this.readdirAsync(symbolPath);
 
-    const functions = await Promise.all(
+    const symbols = await Promise.all(
       symbolFiles.map(symbolFile =>
         this.readFileAsync<libsodiumSymbol>(path.join(symbolPath, symbolFile))
       )
     );
 
-    functions.push({
+    symbols.push({
       name: 'ready',
       noOutputFormat: true,
       return: 'Promise<void>',
@@ -112,13 +124,15 @@ export default class TypeGenerator {
       type: 'function',
     });
 
-    return functions;
+    return symbols.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
   }
 
-  private getConstants(): Promise<Array<libsodiumConstant>> {
+  private async getConstants(): Promise<Array<libsodiumConstant>> {
     const filePath = path.join(this.libsodiumBase, 'wrapper', 'constants.json');
 
-    return this.readFileAsync<Array<libsodiumConstant>>(filePath);
+    const constants = await this.readFileAsync<Array<libsodiumConstant>>(filePath);
+
+    return constants.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
   }
 
   private convertType(type: string): string {
@@ -140,6 +154,15 @@ export default class TypeGenerator {
     if (type.startsWith('{publicKey: _format_output')) {
       return 'KeyPair';
     }
+    if (type.startsWith('_format_output({ciphertext: ciphertext, mac: mac}')) {
+      return 'CryptoBox';
+    }
+    if (type.startsWith('_format_output({mac: mac, cipher: cipher}')) {
+      return 'SecretBox';
+    }
+    if (type.startsWith('_format_output({sharedRx: sharedRx, sharedTx: sharedTx}')) {
+      return 'CryptoKX';
+    }
     if (type === 'random_value') {
       return 'number';
     }
@@ -147,7 +170,7 @@ export default class TypeGenerator {
       return 'boolean';
     }
     if (type.includes('_format_output') || type.includes('stringify')) {
-      return 'string';
+      return 'string | Uint8Array';
     }
     return type;
   }
@@ -190,6 +213,7 @@ export default class TypeGenerator {
               constant.type
             )};\n`)
         );
+        data += '\n';
         return this.getFunctions();
       })
       .then(functions => {

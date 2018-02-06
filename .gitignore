@@ -13,3 +13,4 @@ pids
 package-lock.json
 node_modules
 dist
+libsodium.d.ts

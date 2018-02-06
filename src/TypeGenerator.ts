@@ -61,7 +61,7 @@ export default class TypeGenerator {
     ],
     CryptoKX: [
       { name: 'sharedRx', type: 'Uint8Array' },
-      { name: 'sharedRx', type: 'Uint8Array' },
+      { name: 'sharedTx', type: 'Uint8Array' },
     ],
   };
 

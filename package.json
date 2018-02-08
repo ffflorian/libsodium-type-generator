@@ -1,7 +1,7 @@
 {
   "author": "Florian Keller <github@floriankeller.de>",
   "dependencies": {
-    "@types/node": "9.4.2"
+    "@types/node": "9.4.3"
   },
   "devDependencies": {
     "prettier": "1.10.2",

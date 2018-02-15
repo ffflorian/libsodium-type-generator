@@ -364,25 +364,29 @@ export default class TypeGenerator {
       case 'unsized_buf':
       case 'unsized_buf_optional':
         return 'string | Uint8Array';
-      default:
+      default: {
+        if (Object.keys(this.genericTypes).includes(type)) {
+          return `I${type}`;
+        }
         return type;
+      }
     }
   }
 
   private convertReturnType(type: string): string {
     if (type.startsWith('{publicKey: _format_output')) {
-      return 'KeyPair';
+      return 'IKeyPair';
     }
     if (type.startsWith('_format_output({ciphertext: ciphertext, mac: mac}')) {
-      return 'CryptoBox';
+      return 'ICryptoBox';
     }
     if (type.startsWith('_format_output({mac: mac, cipher: cipher}')) {
-      return 'SecretBox';
+      return 'ISecretBox';
     }
     if (
       type.startsWith('_format_output({sharedRx: sharedRx, sharedTx: sharedTx}')
     ) {
-      return 'CryptoKX';
+      return 'ICryptoKX';
     }
     if (type === 'random_value') {
       return 'number';
@@ -392,6 +396,9 @@ export default class TypeGenerator {
     }
     if (type.includes('_format_output') || type.includes('stringify')) {
       return 'string | Uint8Array';
+    }
+    if (Object.keys(this.genericTypes).includes(type)) {
+      return `I${type}`;
     }
     return type;
   }
@@ -419,11 +426,12 @@ export default class TypeGenerator {
     data += `  type OutputFormat = 'uint8array' | 'text' | 'hex' | 'base64';\n\n`;
 
     Object.keys(this.genericTypes).forEach(type => {
-      data += `  interface ${type} {\n`;
+      data += `  interface I${type} {\n`;
       this.genericTypes[type].forEach(arg => {
         data += `    ${arg.name}: ${arg.type};\n`;
       });
       data += `  }\n\n`;
+      data += `  const ${type}: I${type};\n\n`;
     });
 
     return this.getConstants()

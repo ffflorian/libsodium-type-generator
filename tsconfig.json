@@ -3,7 +3,7 @@
     "declaration": true,
     "lib": [
       "dom",
-      "es6"
+      "es7"
     ],
     "module": "CommonJS",
     "moduleResolution": "node",
@@ -18,6 +18,7 @@
   },
   "exclude": [
     "dist",
-    "node_modules"
+    "node_modules",
+    "libsodium.d.ts"
   ]
 }

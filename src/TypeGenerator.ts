@@ -54,7 +54,7 @@ export default class TypeGenerator {
       { name: 'cipher', type: 'Uint8Array' },
       { name: 'mac', type: 'Uint8Array' }
     ],
-    base64_variant: [
+    base64_variants: [
       {
         name: 'ORIGINAL',
         type: '1 | 0'
@@ -175,7 +175,7 @@ export default class TypeGenerator {
           },
           {
             name: 'variant',
-            type: 'base64_variant'
+            type: 'base64_variants'
           }
         ],
         name: 'from_base64',
@@ -287,7 +287,7 @@ export default class TypeGenerator {
           },
           {
             name: 'variant',
-            type: 'base64_variant'
+            type: 'base64_variants'
           }
         ],
         name: 'to_base64',

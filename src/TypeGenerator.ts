@@ -170,6 +170,10 @@ export default class TypeGenerator {
       {
         inputs: [
           {
+            name: 'input',
+            type: 'string'
+          },
+          {
             name: 'variant',
             type: 'base64_variant'
           }

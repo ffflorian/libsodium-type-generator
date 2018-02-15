@@ -46,9 +46,9 @@ export default class TypeGenerator {
       { name: 'sharedTx', type: 'Uint8Array' }
     ],
     KeyPair: [
+      { name: 'keyType', type: `'curve25519' | 'ed25519' | 'x25519'` },
       { name: 'privateKey', type: 'string | Uint8Array' },
-      { name: 'publicKey', type: 'string | Uint8Array' },
-      { name: 'keyType', type: `'curve25519' | 'ed25519' | 'x25519'` }
+      { name: 'publicKey', type: 'string | Uint8Array' }
     ],
     SecretBox: [
       { name: 'cipher', type: 'Uint8Array' },
@@ -57,19 +57,19 @@ export default class TypeGenerator {
     base64_variants: [
       {
         name: 'ORIGINAL',
-        type: '1 | 0'
+        type: 'number'
       },
       {
         name: 'ORIGINAL_NO_PADDING',
-        type: '3 | 0'
+        type: 'number'
       },
       {
         name: 'URLSAFE',
-        type: '5 | 0'
+        type: 'number'
       },
       {
         name: 'URLSAFE_NO_PADDING',
-        type: '7 | 0'
+        type: 'number'
       }
     ],
     generichash_state_address: [{ name: 'name', type: 'string' }],

@@ -33,6 +33,10 @@ export interface libsodiumGenericTypes {
   [type: string]: Array<{ name: string; type: string }>;
 }
 
+export interface libsodiumEnums {
+  [type: string]: Array<string>;
+}
+
 export default class TypeGenerator {
   private constants: Array<libsodiumConstant>;
 
@@ -54,24 +58,6 @@ export default class TypeGenerator {
       { name: 'cipher', type: 'Uint8Array' },
       { name: 'mac', type: 'Uint8Array' }
     ],
-    base64_variants: [
-      {
-        name: 'ORIGINAL',
-        type: 'number'
-      },
-      {
-        name: 'ORIGINAL_NO_PADDING',
-        type: 'number'
-      },
-      {
-        name: 'URLSAFE',
-        type: 'number'
-      },
-      {
-        name: 'URLSAFE_NO_PADDING',
-        type: 'number'
-      }
-    ],
     generichash_state_address: [{ name: 'name', type: 'string' }],
     onetimeauth_state_address: [{ name: 'name', type: 'string' }],
     state_address: [{ name: 'name', type: 'string' }],
@@ -79,6 +65,15 @@ export default class TypeGenerator {
       { name: 'name', type: 'string' }
     ],
     sign_state_address: [{ name: 'name', type: 'string' }]
+  };
+
+  private enums: libsodiumEnums = {
+    base64_variants: [
+      'ORIGINAL',
+      'ORIGINAL_NO_PADDING',
+      'URLSAFE',
+      'URLSAFE_NO_PADDING'
+    ]
   };
 
   constructor(private libsodiumBase?: string, public outputFile?: string) {
@@ -365,9 +360,6 @@ export default class TypeGenerator {
       case 'unsized_buf_optional':
         return 'string | Uint8Array';
       default: {
-        if (Object.keys(this.genericTypes).includes(type)) {
-          return `I${type}`;
-        }
         return type;
       }
     }
@@ -375,18 +367,18 @@ export default class TypeGenerator {
 
   private convertReturnType(type: string): string {
     if (type.startsWith('{publicKey: _format_output')) {
-      return 'IKeyPair';
+      return 'KeyPair';
     }
     if (type.startsWith('_format_output({ciphertext: ciphertext, mac: mac}')) {
-      return 'ICryptoBox';
+      return 'CryptoBox';
     }
     if (type.startsWith('_format_output({mac: mac, cipher: cipher}')) {
-      return 'ISecretBox';
+      return 'SecretBox';
     }
     if (
       type.startsWith('_format_output({sharedRx: sharedRx, sharedTx: sharedTx}')
     ) {
-      return 'ICryptoKX';
+      return 'CryptoKX';
     }
     if (type === 'random_value') {
       return 'number';
@@ -396,9 +388,6 @@ export default class TypeGenerator {
     }
     if (type.includes('_format_output') || type.includes('stringify')) {
       return 'string | Uint8Array';
-    }
-    if (Object.keys(this.genericTypes).includes(type)) {
-      return `I${type}`;
     }
     return type;
   }
@@ -425,13 +414,20 @@ export default class TypeGenerator {
     let data = `declare module 'libsodium-wrappers-sumo' {\n`;
     data += `  type OutputFormat = 'uint8array' | 'text' | 'hex' | 'base64';\n\n`;
 
-    Object.keys(this.genericTypes).forEach(type => {
-      data += `  interface I${type} {\n`;
-      this.genericTypes[type].forEach(arg => {
-        data += `    ${arg.name}: ${arg.type};\n`;
+    Object.keys(this.enums).forEach(enumName => {
+      data += `  enum ${enumName} {\n`;
+      this.enums[enumName].forEach(enumValue => {
+        data += `    ${enumValue},\n`;
       });
       data += `  }\n\n`;
-      data += `  const ${type}: I${type};\n\n`;
+    });
+
+    Object.keys(this.genericTypes).forEach(typeName => {
+      data += `  interface ${typeName} {\n`;
+      this.genericTypes[typeName].forEach(typeValue => {
+        data += `    ${typeValue.name}: ${typeValue.type};\n`;
+      });
+      data += `  }\n\n`;
     });
 
     return this.getConstants()

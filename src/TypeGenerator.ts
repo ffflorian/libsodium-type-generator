@@ -41,9 +41,9 @@ export default class TypeGenerator {
   private constants: Array<libsodiumConstant>;
 
   private types: libsodiumEnums = {
-    DefaultBinary: ['Uint8Array'],
     Uint8ArrayOutputFormat: [`'uint8array'`],
-    StringOutputFormat: [`'text'`, `'hex'`, `'base64'`]
+    StringOutputFormat: [`'text'`, `'hex'`, `'base64'`],
+    KeyType: [`'curve25519'`, `'ed25519'`, `'x25519'`]
   };
 
   private genericTypes: libsodiumGenericTypes = {
@@ -51,18 +51,35 @@ export default class TypeGenerator {
       { name: 'ciphertext', type: 'Uint8Array' },
       { name: 'mac', type: 'Uint8Array' }
     ],
+    StringCryptoBox: [
+      { name: 'ciphertext', type: 'string' },
+      { name: 'mac', type: 'string' }
+    ],
     CryptoKX: [
       { name: 'sharedRx', type: 'Uint8Array' },
       { name: 'sharedTx', type: 'Uint8Array' }
     ],
+    StringCryptoKX: [
+      { name: 'sharedRx', type: 'string' },
+      { name: 'sharedTx', type: 'string' }
+    ],
     KeyPair: [
-      { name: 'keyType', type: `'curve25519' | 'ed25519' | 'x25519'` },
-      { name: 'privateKey', type: 'string | Uint8Array' },
-      { name: 'publicKey', type: 'string | Uint8Array' }
+      { name: 'keyType', type: 'KeyType' },
+      { name: 'privateKey', type: 'Uint8Array' },
+      { name: 'publicKey', type: 'Uint8Array' }
+    ],
+    StringKeyPair: [
+      { name: 'keyType', type: 'KeyType' },
+      { name: 'privateKey', type: 'string' },
+      { name: 'publicKey', type: 'string' }
     ],
     SecretBox: [
       { name: 'cipher', type: 'Uint8Array' },
       { name: 'mac', type: 'Uint8Array' }
+    ],
+    StringSecretBox: [
+      { name: 'cipher', type: 'string' },
+      { name: 'mac', type: 'string' }
     ],
     generichash_state_address: [{ name: 'name', type: 'string' }],
     onetimeauth_state_address: [{ name: 'name', type: 'string' }],
@@ -371,20 +388,20 @@ export default class TypeGenerator {
     }
   }
 
-  private convertReturnType(type: string): string {
+  private convertReturnType(type: string): string|{uint8Output: string; formattedOutput: string} {
     if (type.startsWith('{publicKey: _format_output')) {
-      return 'KeyPair';
+      return {uint8Output: 'KeyPair', formattedOutput: 'StringKeyPair'};
     }
     if (type.startsWith('_format_output({ciphertext: ciphertext, mac: mac}')) {
-      return 'CryptoBox';
+      return {uint8Output: 'CryptoBox', formattedOutput: 'StringCryptoBox'};
     }
     if (type.startsWith('_format_output({mac: mac, cipher: cipher}')) {
-      return 'SecretBox';
+      return {uint8Output: 'SecretBox', formattedOutput: 'StringSecretBox'};
     }
     if (
       type.startsWith('_format_output({sharedRx: sharedRx, sharedTx: sharedTx}')
     ) {
-      return 'CryptoKX';
+      return {uint8Output: 'CryptoKX', formattedOutput: 'StringCryptoKX'};
     }
     if (type === 'random_value') {
       return 'number';
@@ -396,7 +413,7 @@ export default class TypeGenerator {
       return 'string';
     }
     if (type.includes('_format_output')) {
-      return '_formattedOutput';
+      return {uint8Output: 'Uint8Array', formattedOutput: 'string'};
     }
     return type;
   }
@@ -471,13 +488,13 @@ export default class TypeGenerator {
         : '';
       const returnType = this.convertReturnType(fn.return);
 
-      if (returnType === '_formattedOutput') {
+      if (typeof returnType === 'object') {
         data += `  function ${
           fn.name
-        }(${inputs}outputFormat?: Uint8ArrayOutputFormat): DefaultBinary;\n`;
+        }(${inputs}outputFormat?: Uint8ArrayOutputFormat): ${returnType.uint8Output};\n`;
         data += `  function ${
           fn.name
-        }(${inputs}outputFormat: StringOutputFormat): string;\n`;
+        }(${inputs}outputFormat: StringOutputFormat): ${returnType.formattedOutput};\n`;
       } else {
         data += `  function ${fn.name}(${inputs}): ${returnType};\n`;
       }

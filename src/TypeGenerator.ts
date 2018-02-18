@@ -40,6 +40,12 @@ export interface libsodiumEnums {
 export default class TypeGenerator {
   private constants: Array<libsodiumConstant>;
 
+  private types: libsodiumEnums = {
+    DefaultBinary: ['Uint8Array'],
+    Uint8ArrayOutputFormat: [`'uint8array'`],
+    StringOutputFormat: [`'text'`, `'hex'`, `'base64'`]
+  };
+
   private genericTypes: libsodiumGenericTypes = {
     CryptoBox: [
       { name: 'ciphertext', type: 'Uint8Array' },
@@ -386,26 +392,28 @@ export default class TypeGenerator {
     if (type.includes('=== 0')) {
       return 'boolean';
     }
-    if (type.includes('_format_output') || type.includes('stringify')) {
-      return 'string | Uint8Array';
+    if (type.includes('stringify')) {
+      return 'string';
+    }
+    if (type.includes('_format_output')) {
+      return '_formattedOutput';
     }
     return type;
   }
 
-  private buildData(): Promise<string> {
+  private async buildData(): Promise<string> {
     const getParameters = (
-      arr: Array<libsodiumSymbolIO>,
-      hasOutputFormat: boolean
+      parameterArr: Array<libsodiumSymbolIO>,
+      formattingAvailable: boolean
     ): string => {
       let parameters = '';
-      arr.forEach((param, index) => {
-        const isLast = index === arr.length - 1;
-        parameters += `${param.name}: ${this.convertType(param.type)}${
-          param.type.includes('optional') ? ' | null' : ''
-        }${
-          isLast
-            ? hasOutputFormat ? ', outputFormat?: OutputFormat' : ''
-            : ', '
+      parameterArr.forEach((param, index) => {
+        const isLast = index === parameterArr.length - 1;
+        const convertedType = this.convertType(param.type);
+        const optional = param.type.includes('optional') ? ' | null' : '';
+
+        parameters += `${param.name}: ${convertedType}${optional}${
+          isLast ? formattingAvailable ? ', ' : '' : ', '
         }`;
       });
       return parameters;
@@ -415,8 +423,18 @@ export default class TypeGenerator {
       '// Type definitions for libsodium-wrappers-sumo 0.7.3\n' +
       '// Project: https://github.com/jedisct1/libsodium.js\n' +
       '// Definitions by: Florian Keller <https://github.com/ffflorian>\n\n' +
-      `declare module 'libsodium-wrappers-sumo' {\n` +
-      `  type OutputFormat = 'uint8array' | 'text' | 'hex' | 'base64';\n\n`;
+      `declare module 'libsodium-wrappers-sumo' {\n`;
+
+    Object.keys(this.types).forEach(typeName => {
+      data += `  type ${typeName} = `;
+      this.types[typeName].forEach((typeValue, index) => {
+        const isLast = index === this.types[typeName].length - 1;
+        data += typeValue + (isLast ? ';' : ' | ');
+      });
+      data += '\n';
+    });
+
+    data += '\n';
 
     Object.keys(this.enums).forEach(enumName => {
       data += `  enum ${enumName} {\n`;
@@ -428,38 +446,46 @@ export default class TypeGenerator {
 
     Object.keys(this.genericTypes).forEach(typeName => {
       data += `  interface ${typeName} {\n`;
-      this.genericTypes[typeName].forEach(typeValue => {
-        data += `    ${typeValue.name}: ${typeValue.type};\n`;
+      this.genericTypes[typeName].forEach(({ name, type }) => {
+        data += `    ${name}: ${type};\n`;
       });
       data += `  }\n\n`;
     });
 
-    return this.getConstants()
-      .then(constants => {
-        constants.forEach(
-          (constant: libsodiumConstant) =>
-            (data += `  const ${constant.name}: ${this.convertType(
-              constant.type
-            )};\n`)
-        );
-        data += '\n';
-        return this.getFunctions();
-      })
-      .then(functions => {
-        functions.forEach(fn => {
-          if (!fn.return) {
-            fn.return = 'void';
-          }
-          return (data += `  function ${fn.name}(${
-            fn.inputs
-              ? getParameters(fn.inputs, fn.return.includes('_format_output'))
-              : ''
-          }): ${this.convertReturnType(fn.return)};\n`);
-        });
+    const constants = await this.getConstants();
+    constants.forEach(constant => {
+      const convertedType = this.convertType(constant.type);
+      data += `  const ${constant.name}: ${convertedType};\n`;
+    });
 
-        data += '}';
-        return data;
-      });
+    data += '\n';
+
+    const functions = await this.getFunctions();
+    functions.forEach(fn => {
+      if (!fn.return) {
+        fn.return = 'void';
+      }
+      const formattingAvailable = fn.return.includes('_format_output');
+      const inputs = fn.inputs
+        ? getParameters(fn.inputs, formattingAvailable)
+        : '';
+      const returnType = this.convertReturnType(fn.return);
+
+      if (returnType === '_formattedOutput') {
+        data += `  function ${
+          fn.name
+        }(${inputs}outputFormat?: Uint8ArrayOutputFormat): DefaultBinary;\n`;
+        data += `  function ${
+          fn.name
+        }(${inputs}outputFormat: StringOutputFormat): string;\n`;
+      } else {
+        data += `  function ${fn.name}(${inputs}): ${returnType};\n`;
+      }
+    });
+
+    data += '}';
+
+    return data;
   }
 
   public generate(): Promise<void> {

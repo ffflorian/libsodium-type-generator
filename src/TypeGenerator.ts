@@ -411,8 +411,12 @@ export default class TypeGenerator {
       return parameters;
     };
 
-    let data = `declare module 'libsodium-wrappers-sumo' {\n`;
-    data += `  type OutputFormat = 'uint8array' | 'text' | 'hex' | 'base64';\n\n`;
+    let data =
+      '// Type definitions for libsodium-wrappers-sumo 0.7.3\n' +
+      '// Project: https://github.com/jedisct1/libsodium.js\n' +
+      '// Definitions by: Florian Keller <https://github.com/ffflorian>\n\n' +
+      `declare module 'libsodium-wrappers-sumo' {\n` +
+      `  type OutputFormat = 'uint8array' | 'text' | 'hex' | 'base64';\n\n`;
 
     Object.keys(this.enums).forEach(enumName => {
       data += `  enum ${enumName} {\n`;

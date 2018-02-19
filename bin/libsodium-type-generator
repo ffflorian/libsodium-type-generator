@@ -1,0 +1,14 @@
+#!/usr/bin/env node
+
+//@ts-check
+
+const { default: TypeGenerator } = require('../dist');
+
+new TypeGenerator()
+.generate()
+  .then(outputFile =>
+    console.log(
+      `Success! The types file is now available at "${outputFile}."`
+    )
+  )
+  .catch(error => console.error(error));

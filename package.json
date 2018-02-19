@@ -1,13 +1,19 @@
 {
   "author": "Florian Keller <github@floriankeller.de>",
+  "bin": "bin/libsodium-type-generator",
+  "dependencies": {
+    "commander": "2.14.1",
+    "tmp": "0.0.33"
+  },
   "devDependencies": {
     "@types/node": "9.4.6",
-    "libsodium-wrappers-sumo": "0.7.3",
+    "@types/tmp": "0.0.33",
     "prettier": "1.10.2",
     "rimraf": "2.6.2",
     "typescript": "2.7.1"
   },
   "files": [
+    "bin",
     "dist"
   ],
   "license": "MIT",
@@ -16,11 +22,11 @@
   "repository": "https://github.com/ffflorian/libsodium-type-generator.git",
   "scripts": {
     "clear": "rimraf dist",
-    "build": "yarn clear && tsc",
-    "install": "git submodule init && git submodule update --remote --depth 1",
-    "prettier": "prettier --single-quote --write src/*.ts",
-    "start": "node dist/index.js"
+    "build": "tsc",
+    "dist": "yarn clear && yarn build",
+    "prettier": "prettier --single-quote --write src/*.ts bin/*",
+    "start": "yarn dist && ./bin/libsodium-type-generator"
   },
-  "types": "dist/TypeGenerator.d.ts",
+  "types": "dist/index.d.ts",
   "version": "1.0.8"
 }

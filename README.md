@@ -5,8 +5,34 @@ This is a TypeScript definitions generator for [`libsodium.js`](https://github.c
 For now this generates only the types for `libsodium-wrappers-sumo`.
 
 ## Run
+## Install
 ```
-yarn
-yarn build
-yarn start
+yarn add -g libsodium-type-generator
+```
+
+## Run
+```
+libsodium-type-generator --source /path/to/source
+```
+or
+```
+libsodium-type-generator
+# source will be downloaded from GitHub
+```
+
+## Include in your project
+```ts
+import TypeGenerator from 'libsodium-type-generator';
+
+const generator = new TypeGenerator();
+
+generator
+  .generate()
+  .then(outputFile => {
+    // success!
+    console.log(outputFile); // /home/Download/ ...
+  })
+  .catch(error => {
+    // handle error
+  });
 ```

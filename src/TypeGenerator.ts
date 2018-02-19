@@ -381,10 +381,11 @@ export default class TypeGenerator {
       case 'uint':
         return 'number';
       case 'buf':
-      case 'unsized_buf':
-      case 'unsized_buf_optional':
       case 'randombytes_implementation':
         return 'Uint8Array';
+      case 'unsized_buf':
+      case 'unsized_buf_optional':
+        return 'string | Uint8Array'
       default: {
         return type;
       }

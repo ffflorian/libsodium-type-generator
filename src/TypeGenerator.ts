@@ -385,7 +385,7 @@ export default class TypeGenerator {
         return 'Uint8Array';
       case 'unsized_buf':
       case 'unsized_buf_optional':
-        return 'string | Uint8Array';
+        return 'string | Uint8Array | undefined';
       default: {
         return type;
       }

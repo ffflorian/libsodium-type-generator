@@ -381,11 +381,10 @@ export default class TypeGenerator {
       case 'uint':
         return 'number';
       case 'buf':
-      case 'randombytes_implementation':
-        return 'Uint8Array';
       case 'unsized_buf':
       case 'unsized_buf_optional':
-        return 'string | Uint8Array';
+      case 'randombytes_implementation':
+        return 'Uint8Array';
       default: {
         return type;
       }
@@ -431,9 +430,9 @@ export default class TypeGenerator {
       parameterArr.forEach((param, index) => {
         const isLast = index === parameterArr.length - 1;
         const convertedType = this.convertType(param.type);
-        const optional = param.type.includes('optional') ? ' | null' : '';
+        const optional = param.type.includes('optional');
 
-        parameters += `${param.name}: ${convertedType}${optional}${
+        parameters += `${param.name}${optional ? '?' : ''}: ${convertedType}${optional ? ' | null' : ''}${
           isLast ? (formattingAvailable ? ', ' : '') : ', '
         }`;
       });
@@ -495,10 +494,10 @@ export default class TypeGenerator {
       if (typeof returnType === 'object') {
         data +=
           `  function ${fn.name}` +
-          `(${inputs}outputFormat?: Uint8ArrayOutputFormat): ` +
+          `(${inputs}outputFormat?: Uint8ArrayOutputFormat | null): ` +
           `${returnType.binaryType};\n` +
           `  function ${fn.name}` +
-          `(${inputs}outputFormat: StringOutputFormat): ` +
+          `(${inputs}outputFormat?: StringOutputFormat | null): ` +
           `${returnType.stringType};\n`;
       } else {
         data += `  function ${fn.name}(${inputs}): ${returnType};\n`;

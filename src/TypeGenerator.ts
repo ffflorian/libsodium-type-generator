@@ -1,9 +1,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+export interface FormattableReturnType {
+  binaryType: string;
+  stringType: string;
+}
+
 export interface libsodiumConstant {
   name: string;
-  type: 'uint' | 'string';
+  type: string;
 }
 
 export interface libsodiumSymbolIO {
@@ -292,12 +297,6 @@ export default class TypeGenerator {
         type: 'function'
       },
       {
-        name: 'ready',
-        noOutputFormat: true,
-        return: 'Promise<void>',
-        type: 'function'
-      },
-      {
         inputs: [
           {
             name: 'input',
@@ -367,6 +366,11 @@ export default class TypeGenerator {
       filePath
     );
 
+    constants.push({
+      name: 'ready',
+      type: 'Promise<void>'
+    });
+
     return constants.sort(
       (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
     );
@@ -388,20 +392,20 @@ export default class TypeGenerator {
     }
   }
 
-  private convertReturnType(type: string): string|{uint8Output: string; formattedOutput: string} {
+  private convertReturnType(type: string): string | FormattableReturnType {
     if (type.startsWith('{publicKey: _format_output')) {
-      return {uint8Output: 'KeyPair', formattedOutput: 'StringKeyPair'};
+      return { binaryType: 'KeyPair', stringType: 'StringKeyPair' };
     }
     if (type.startsWith('_format_output({ciphertext: ciphertext, mac: mac}')) {
-      return {uint8Output: 'CryptoBox', formattedOutput: 'StringCryptoBox'};
+      return { binaryType: 'CryptoBox', stringType: 'StringCryptoBox' };
     }
     if (type.startsWith('_format_output({mac: mac, cipher: cipher}')) {
-      return {uint8Output: 'SecretBox', formattedOutput: 'StringSecretBox'};
+      return { binaryType: 'SecretBox', stringType: 'StringSecretBox' };
     }
     if (
       type.startsWith('_format_output({sharedRx: sharedRx, sharedTx: sharedTx}')
     ) {
-      return {uint8Output: 'CryptoKX', formattedOutput: 'StringCryptoKX'};
+      return { binaryType: 'CryptoKX', stringType: 'StringCryptoKX' };
     }
     if (type === 'random_value') {
       return 'number';
@@ -413,7 +417,7 @@ export default class TypeGenerator {
       return 'string';
     }
     if (type.includes('_format_output')) {
-      return {uint8Output: 'Uint8Array', formattedOutput: 'string'};
+      return { binaryType: 'Uint8Array', stringType: 'string' };
     }
     return type;
   }
@@ -430,7 +434,7 @@ export default class TypeGenerator {
         const optional = param.type.includes('optional') ? ' | null' : '';
 
         parameters += `${param.name}: ${convertedType}${optional}${
-          isLast ? formattingAvailable ? ', ' : '' : ', '
+          isLast ? (formattingAvailable ? ', ' : '') : ', '
         }`;
       });
       return parameters;
@@ -489,12 +493,13 @@ export default class TypeGenerator {
       const returnType = this.convertReturnType(fn.return);
 
       if (typeof returnType === 'object') {
-        data += `  function ${
-          fn.name
-        }(${inputs}outputFormat?: Uint8ArrayOutputFormat): ${returnType.uint8Output};\n`;
-        data += `  function ${
-          fn.name
-        }(${inputs}outputFormat: StringOutputFormat): ${returnType.formattedOutput};\n`;
+        data +=
+          `  function ${fn.name}` +
+          `(${inputs}outputFormat?: Uint8ArrayOutputFormat): ` +
+          `${returnType.binaryType};\n` +
+          `  function ${fn.name}` +
+          `(${inputs}outputFormat: StringOutputFormat): ` +
+          `${returnType.stringType};\n`;
       } else {
         data += `  function ${fn.name}(${inputs}): ${returnType};\n`;
       }

@@ -385,7 +385,7 @@ export default class TypeGenerator {
         return 'Uint8Array';
       case 'unsized_buf':
       case 'unsized_buf_optional':
-        return 'string | Uint8Array'
+        return 'string | Uint8Array';
       default: {
         return type;
       }
@@ -433,9 +433,9 @@ export default class TypeGenerator {
         const convertedType = this.convertType(param.type);
         const optional = param.type.includes('optional');
 
-        parameters += `${param.name}: ${convertedType}${optional ? ' | null' : ''}${
-          isLast ? (formattingAvailable ? ', ' : '') : ', '
-        }`;
+        parameters += `${param.name}: ${convertedType}${
+          optional ? ' | null' : ''
+        }${isLast ? (formattingAvailable ? ', ' : '') : ', '}`;
       });
       return parameters;
     };

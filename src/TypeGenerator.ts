@@ -432,7 +432,7 @@ export default class TypeGenerator {
         const convertedType = this.convertType(param.type);
         const optional = param.type.includes('optional');
 
-        parameters += `${param.name}${optional ? '?' : ''}: ${convertedType}${optional ? ' | null' : ''}${
+        parameters += `${param.name}: ${convertedType}${optional ? ' | null' : ''}${
           isLast ? (formattingAvailable ? ', ' : '') : ', '
         }`;
       });

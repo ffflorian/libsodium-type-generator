@@ -2,10 +2,19 @@
 
 //@ts-check
 
-const { default: TypeGenerator } = require('../dist');
+const { default: TypeGenerator } = require('../dist/');
+const { description, version } = require('../package.json');
+const program = require('commander');
 
-new TypeGenerator()
-.generate()
+program
+  .version(version)
+  .description(description)
+  .option('-b, --base <path>', 'Specify the libsodium.js base path')
+  .option('-o, --output <file>', 'Specify the output file')
+  .parse(process.argv);
+
+new TypeGenerator(program.base, program.output)
+  .generate()
   .then(outputFile =>
     console.log(
       `Success! The types file is now available at "${outputFile}."`

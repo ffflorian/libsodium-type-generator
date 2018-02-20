@@ -4,9 +4,14 @@ import * as https from 'https';
 import * as http from 'http';
 import * as tmp from 'tmp';
 
+export interface FormattableReturnType {
+  binaryType: string;
+  stringType: string;
+}
+
 export interface libsodiumConstant {
   name: string;
-  type: 'uint' | 'string';
+  type: string;
 }
 
 export interface libsodiumSymbolIO {
@@ -382,12 +387,6 @@ export default class TypeGenerator {
         type: 'function'
       },
       {
-        name: 'ready',
-        noOutputFormat: true,
-        return: 'Promise<void>',
-        type: 'function'
-      },
-      {
         inputs: [
           {
             name: 'input',
@@ -461,6 +460,11 @@ export default class TypeGenerator {
       filePath
     );
 
+    constants.push({
+      name: 'ready',
+      type: 'Promise<void>'
+    });
+
     return constants.sort(
       (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
     );
@@ -475,15 +479,13 @@ export default class TypeGenerator {
         return 'Uint8Array';
       case 'unsized_buf':
       case 'unsized_buf_optional':
-        return 'string | Uint8Array';
+        return 'string | Uint8Array | undefined';
       default:
         return type;
     }
   }
 
-  private convertReturnType(
-    type: string
-  ): string | { binaryType: string; stringType: string } {
+  private convertReturnType(type: string): string | FormattableReturnType {
     if (type.startsWith('{publicKey: _format_output')) {
       return { binaryType: 'KeyPair', stringType: 'StringKeyPair' };
     }
@@ -522,11 +524,11 @@ export default class TypeGenerator {
       parameterArr.forEach((param, index) => {
         const isLast = index === parameterArr.length - 1;
         const convertedType = this.convertType(param.type);
-        const optional = param.type.includes('optional') ? ' | null' : '';
+        const optional = param.type.includes('optional');
 
-        parameters += `${param.name}: ${convertedType}${optional}${
-          isLast ? (formattingAvailable ? ', ' : '') : ', '
-        }`;
+        parameters += `${param.name}: ${convertedType}${
+          optional ? ' | null' : ''
+        }${isLast ? (formattingAvailable ? ', ' : '') : ', '}`;
       });
       return parameters;
     };
@@ -584,16 +586,13 @@ export default class TypeGenerator {
       const returnType = this.convertReturnType(fn.return);
 
       if (typeof returnType === 'object') {
-        data += `  function ${
-          fn.name
-        }(${inputs}outputFormat?: Uint8ArrayOutputFormat): ${
-          returnType.binaryType
-        };\n`;
-        data += `  function ${
-          fn.name
-        }(${inputs}outputFormat: StringOutputFormat): ${
-          returnType.stringType
-        };\n`;
+        data +=
+          `  function ${fn.name}` +
+          `(${inputs}outputFormat?: Uint8ArrayOutputFormat | null): ` +
+          `${returnType.binaryType};\n` +
+          `  function ${fn.name}` +
+          `(${inputs}outputFormat?: StringOutputFormat | null): ` +
+          `${returnType.stringType};\n`;
       } else {
         data += `  function ${fn.name}(${inputs}): ${returnType};\n`;
       }

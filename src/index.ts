@@ -1,65 +1,29 @@
+/// <reference path="./libsodiumtypes.d.ts" />
+
 import * as fs from 'fs';
 import * as path from 'path';
-import * as https from 'https';
-import * as http from 'http';
 import * as tmp from 'tmp';
+import { URL } from 'url';
+import utils from './utils';
 
-export interface FormattableReturnType {
-  binaryType: string;
-  stringType: string;
-}
-
-export interface libsodiumConstant {
-  name: string;
-  type: string;
-}
-
-export interface libsodiumSymbolIO {
-  name: string;
-  optional?: boolean;
-  size?: string;
-  type: string;
-}
-
-export interface libsodiumSymbol {
-  assert_retval?: [
-    {
-      condition: string;
-      or_else_throw: string;
-    }
-  ];
-  dependencies?: Array<string>;
-  inputs?: Array<libsodiumSymbolIO>;
-  name: string;
-  noOutputFormat?: boolean;
-  outputs?: Array<libsodiumSymbolIO>;
-  return?: string;
-  target?: string;
-  type: 'function';
-}
-
-export interface libsodiumGenericTypes {
-  [type: string]: Array<{ name: string; type: string }>;
-}
-
-export interface libsodiumEnums {
-  [type: string]: Array<string>;
-}
+const decompress = require('decompress');
+const decompressUnzip = require('decompress-unzip');
+const http = require('follow-redirects/http');
 
 export default class TypeGenerator {
-  private constants: Array<libsodiumConstant>;
+  private constants: Array<libsodiumtypes.libsodiumConstant>;
   private libsodiumVersion = '0.7.3';
-  private defaultLibsodiumSource = `https://github.com/jedisct1/libsodium.js/archive/${
+  private externalLibsodiumSource = `https://github.com/jedisct1/libsodium.js/archive/${
     this.libsodiumVersion
   }.zip`;
 
-  private types: libsodiumEnums = {
+  private types: libsodiumtypes.libsodiumEnums = {
     Uint8ArrayOutputFormat: [`'uint8array'`],
     StringOutputFormat: [`'text'`, `'hex'`, `'base64'`],
     KeyType: [`'curve25519'`, `'ed25519'`, `'x25519'`]
   };
 
-  private genericTypes: libsodiumGenericTypes = {
+  private genericTypes: libsodiumtypes.libsodiumGenericTypes = {
     CryptoBox: [
       { name: 'ciphertext', type: 'Uint8Array' },
       { name: 'mac', type: 'Uint8Array' }
@@ -103,7 +67,7 @@ export default class TypeGenerator {
     sign_state_address: [{ name: 'name', type: 'string' }]
   };
 
-  private enums: libsodiumEnums = {
+  private enums: libsodiumtypes.libsodiumEnums = {
     base64_variants: [
       'ORIGINAL',
       'ORIGINAL_NO_PADDING',
@@ -113,139 +77,68 @@ export default class TypeGenerator {
   };
 
   /**
-   * @param libsodiumSource The source of the libsodium.js library (local path)
    * @param outputFile Where to write the libsodium.js types file
+   * @param libsodiumLocalSource The source of the libsodium.js library (local path)
    */
-  constructor(private libsodiumSource?: string, public outputFile?: string) {}
+  constructor(
+    public outputFile: string,
+    private libsodiumLocalSource?: string
+  ) {
+    this.outputFile = path.resolve(this.outputFile);
+  }
 
-  public async setVersion(version: string): Promise<TypeGenerator> {
+  public async setDownloadVersion(version: string): Promise<TypeGenerator> {
     this.libsodiumVersion = version;
+    this.externalLibsodiumSource = `https://github.com/jedisct1/libsodium.js/archive/${
+      this.libsodiumVersion
+    }.zip`;
+
     return this;
   }
 
-  private checkSource(path: string): boolean {
-    // check this.libsodiumSource;
-    return false;
-  }
-
-  private createTmpDirAsync(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      tmp.dir((error, path) => {
-        if (!error) {
-          resolve(path);
-        } else {
-          reject(error);
-        }
-      });
-    });
-  }
-
-  private httpsGetAsync(url: string): Promise<Array<any>> {
-    const hasHeader = (header: string, headersObj: http.IncomingHttpHeaders) => {
-      const headers = Object.keys(headersObj);
-      const lheaders = headers.map(h => h.toLowerCase());
-      header = header.toLowerCase()
-      for (let i=0; i < lheaders.length; i++) {
-        if (lheaders[i] === header) {
-          return headers[i];
-        }
-      }
-      return false;
-    }
-
-    return new Promise((resolve, reject) => {
-      https
-        .get(url, res => {
-          const { statusCode } = res;
-          const contentType = res.headers['content-type'];
-
-          let error;
-          if (statusCode >= 300 && statusCode < 400) {
-            const locationHeader = hasHeader('location', res.headers);
-            if (locationHeader) {
-              const newLocation = res.headers[locationHeader];
-              console.log(`Redirecting to ${newLocation}`)
-              url = newLocation.toString();
-            }
-          } else if (statusCode !== 200) {
-            error = new Error(
-              'Request Failed.\n' + `Status Code: ${statusCode}`
-            );
-          }
-
-          if (error) {
-            return reject(error.message);
-          }
-
-          res.setEncoding('utf8');
-
-          let rawData: Array<any> = [];
-
-          res.on('data', chunk => rawData.push(chunk));
-          res.on('end', () => resolve(rawData));
-        })
-        .on('error', e => {
-          reject(e.message);
-        });
-    });
-  }
-
-  private async downloadLibrary() {
+  private async downloadLibrary(): Promise<string> {
     console.log(
-      `Downloading libsodium.js from ${this.defaultLibsodiumSource} ...`
+      `Downloading libsodium.js from '${this.externalLibsodiumSource}' ...`
     );
 
     //const tmpDir = await this.createTmpDirAsync();
-    const data = await this.httpsGetAsync(this.defaultLibsodiumSource);
-    console.log(data)
-
-    this.checkSource('');
-  }
-
-  private readdirAsync(path: string): Promise<Array<string>> {
-    return new Promise((resolve, reject) => {
-      fs.readdir(path, (error, data) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(data);
-        }
-      });
+    const tmpPath = await utils.promisify<any>(cb => {
+      try {
+        tmp.dir(cb);
+      } catch (err) {
+        console.error('Could not create temp dir:', err.message);
+      }
     });
+    const zipURL = new URL(this.externalLibsodiumSource);
+    const downloadFileName = path.join(tmpPath, 'libsodium.zip');
+    const file = await utils.httpsGetFileAsync(zipURL, downloadFileName);
+    await decompress(file, tmpPath, { plugins: [decompressUnzip()] });
+
+    const proposedSymbolSource = path.join(
+      tmpPath,
+      `libsodium.js-${this.libsodiumVersion}`
+    );
+
+    return proposedSymbolSource;
   }
 
-  private readFileAsync<T>(filePath: string): Promise<T> {
-    return new Promise((resolve, reject) => {
-      fs.readFile(filePath, (error, data) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(JSON.parse(data.toString()));
-        }
-      });
-    });
-  }
-
-  private writeFileAsync(filePath: string, data: any): Promise<string> {
-    return new Promise((resolve, reject) => {
-      fs.writeFile(filePath, data, error => {
-        if (!error) {
-          resolve(filePath);
-        } else {
-          reject(error);
-        }
-      });
-    });
-  }
-
-  private async getFunctions(): Promise<Array<libsodiumSymbol>> {
-    const symbolPath = path.join(this.libsodiumSource, 'wrapper', 'symbols');
-    const symbolFiles = await this.readdirAsync(symbolPath);
+  private async getFunctions(): Promise<Array<libsodiumtypes.libsodiumSymbol>> {
+    const symbolPath = path.join(
+      this.libsodiumLocalSource,
+      'wrapper',
+      'symbols'
+    );
+    const symbolFiles = await utils.promisify<Array<string>>(cb =>
+      fs.readdir(symbolPath, cb)
+    );
 
     const symbols = await Promise.all(
-      symbolFiles.map(symbolFile =>
-        this.readFileAsync<libsodiumSymbol>(path.join(symbolPath, symbolFile))
-      )
+      symbolFiles.map(async symbolFile => {
+        const symbolRaw = await utils.promisify<Buffer>(cb =>
+          fs.readFile(path.join(symbolPath, symbolFile), cb)
+        );
+        return JSON.parse(symbolRaw.toString());
+      })
     );
 
     symbols.push(
@@ -449,15 +342,20 @@ export default class TypeGenerator {
     );
   }
 
-  private async getConstants(): Promise<Array<libsodiumConstant>> {
+  private async getConstants(): Promise<
+    Array<libsodiumtypes.libsodiumConstant>
+  > {
     const filePath = path.join(
-      this.libsodiumSource,
+      this.libsodiumLocalSource,
       'wrapper',
       'constants.json'
     );
 
-    const constants = await this.readFileAsync<Array<libsodiumConstant>>(
-      filePath
+    const constantsRaw = await utils.promisify<Buffer>(cb =>
+      fs.readFile(filePath, cb)
+    );
+    const constants: Array<libsodiumtypes.libsodiumConstant> = JSON.parse(
+      constantsRaw.toString()
     );
 
     constants.push({
@@ -485,7 +383,9 @@ export default class TypeGenerator {
     }
   }
 
-  private convertReturnType(type: string): string | FormattableReturnType {
+  private convertReturnType(
+    type: string
+  ): string | libsodiumtypes.FormattableReturnType {
     if (type.startsWith('{publicKey: _format_output')) {
       return { binaryType: 'KeyPair', stringType: 'StringKeyPair' };
     }
@@ -517,7 +417,7 @@ export default class TypeGenerator {
 
   private async buildData(): Promise<string> {
     const getParameters = (
-      parameterArr: Array<libsodiumSymbolIO>,
+      parameterArr: Array<libsodiumtypes.libsodiumSymbolIO>,
       formattingAvailable: boolean
     ): string => {
       let parameters = '';
@@ -604,12 +504,18 @@ export default class TypeGenerator {
   }
 
   public async generate(): Promise<string> {
-    if (!this.libsodiumSource) {
-      await this.downloadLibrary();
+    if (!this.libsodiumLocalSource) {
+      this.libsodiumLocalSource = await this.downloadLibrary();
     }
-    return '';
 
-    //const data = await this.buildData();
-    //return this.writeFileAsync(this.outputFile, data);
+    utils.checkSource(this.libsodiumLocalSource);
+
+    const data = await this.buildData();
+
+    await utils.promisify<string>(cb =>
+      fs.writeFile(this.outputFile, data, cb)
+    );
+
+    return this.outputFile;
   }
 }

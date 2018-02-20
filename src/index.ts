@@ -1,83 +1,71 @@
-/// <reference path="./libsodiumtypes.d.ts" />
-
 import * as fs from 'fs';
 import * as path from 'path';
 import * as tmp from 'tmp';
 import { URL } from 'url';
+import * as rimraf from 'rimraf';
+import libsodiumTypes from './libsodiumTypes';
 import utils from './utils';
 
 const decompress = require('decompress');
 const decompressUnzip = require('decompress-unzip');
 const http = require('follow-redirects/http');
 
+interface FormattableReturnType {
+  binaryType: string;
+  stringType: string;
+}
+
+interface libsodiumConstant {
+  name: string;
+  type: string;
+}
+
+export interface libsodiumSymbolIO {
+  name: string;
+  optional?: boolean;
+  size?: string;
+  type: string;
+}
+
+export interface libsodiumSymbol {
+  assert_retval?: [
+    {
+      condition: string;
+      or_else_throw: string;
+    }
+  ];
+  dependencies?: Array<string>;
+  inputs?: Array<libsodiumSymbolIO>;
+  name: string;
+  noOutputFormat?: boolean;
+  outputs?: Array<libsodiumSymbolIO>;
+  return?: string;
+  target?: string;
+  type: 'function';
+}
+
+interface libsodiumGenericTypes {
+  [type: string]: Array<{ name: string; type: string }>;
+}
+
+interface libsodiumEnums {
+  [type: string]: Array<string>;
+}
+
 export default class TypeGenerator {
-  private constants: Array<libsodiumtypes.libsodiumConstant>;
+  private constants: Array<libsodiumConstant>;
   private libsodiumVersion = '0.7.3';
   private externalLibsodiumSource = `https://github.com/jedisct1/libsodium.js/archive/${
     this.libsodiumVersion
   }.zip`;
 
-  private types: libsodiumtypes.libsodiumEnums = {
-    Uint8ArrayOutputFormat: [`'uint8array'`],
-    StringOutputFormat: [`'text'`, `'hex'`, `'base64'`],
-    KeyType: [`'curve25519'`, `'ed25519'`, `'x25519'`]
-  };
-
-  private genericTypes: libsodiumtypes.libsodiumGenericTypes = {
-    CryptoBox: [
-      { name: 'ciphertext', type: 'Uint8Array' },
-      { name: 'mac', type: 'Uint8Array' }
-    ],
-    StringCryptoBox: [
-      { name: 'ciphertext', type: 'string' },
-      { name: 'mac', type: 'string' }
-    ],
-    CryptoKX: [
-      { name: 'sharedRx', type: 'Uint8Array' },
-      { name: 'sharedTx', type: 'Uint8Array' }
-    ],
-    StringCryptoKX: [
-      { name: 'sharedRx', type: 'string' },
-      { name: 'sharedTx', type: 'string' }
-    ],
-    KeyPair: [
-      { name: 'keyType', type: 'KeyType' },
-      { name: 'privateKey', type: 'Uint8Array' },
-      { name: 'publicKey', type: 'Uint8Array' }
-    ],
-    StringKeyPair: [
-      { name: 'keyType', type: 'KeyType' },
-      { name: 'privateKey', type: 'string' },
-      { name: 'publicKey', type: 'string' }
-    ],
-    SecretBox: [
-      { name: 'cipher', type: 'Uint8Array' },
-      { name: 'mac', type: 'Uint8Array' }
-    ],
-    StringSecretBox: [
-      { name: 'cipher', type: 'string' },
-      { name: 'mac', type: 'string' }
-    ],
-    generichash_state_address: [{ name: 'name', type: 'string' }],
-    onetimeauth_state_address: [{ name: 'name', type: 'string' }],
-    state_address: [{ name: 'name', type: 'string' }],
-    secretstream_xchacha20poly1305_state_address: [
-      { name: 'name', type: 'string' }
-    ],
-    sign_state_address: [{ name: 'name', type: 'string' }]
-  };
-
-  private enums: libsodiumtypes.libsodiumEnums = {
-    base64_variants: [
-      'ORIGINAL',
-      'ORIGINAL_NO_PADDING',
-      'URLSAFE',
-      'URLSAFE_NO_PADDING'
-    ]
-  };
+  private additionalSymbols: Array<libsodiumSymbol> = libsodiumTypes.additionalSymbols;
+  private enums: libsodiumEnums = libsodiumTypes.enums;
+  private genericTypes: libsodiumGenericTypes = libsodiumTypes.genericTypes;
+  private types: libsodiumEnums = libsodiumTypes.types;
 
   /**
-   * @param outputFile Where to write the libsodium.js types file
+   * @param outputFile Where to write the libsodium.js declarationfile
    * @param libsodiumLocalSource The source of the libsodium.js library (local path)
    */
   constructor(
@@ -98,10 +86,9 @@ export default class TypeGenerator {
 
   private async downloadLibrary(): Promise<string> {
     console.log(
-      `Downloading libsodium.js from '${this.externalLibsodiumSource}' ...`
+      `Downloading libsodium.js from "${this.externalLibsodiumSource}" ...`
     );
 
-    //const tmpDir = await this.createTmpDirAsync();
     const tmpPath = await utils.promisify<any>(cb => {
       try {
         tmp.dir(cb);
@@ -122,12 +109,13 @@ export default class TypeGenerator {
     return proposedSymbolSource;
   }
 
-  private async getFunctions(): Promise<Array<libsodiumtypes.libsodiumSymbol>> {
+  private async getFunctions(): Promise<Array<libsodiumSymbol>> {
     const symbolPath = path.join(
       this.libsodiumLocalSource,
       'wrapper',
       'symbols'
     );
+
     const symbolFiles = await utils.promisify<Array<string>>(cb =>
       fs.readdir(symbolPath, cb)
     );
@@ -137,214 +125,18 @@ export default class TypeGenerator {
         const symbolRaw = await utils.promisify<Buffer>(cb =>
           fs.readFile(path.join(symbolPath, symbolFile), cb)
         );
-        return JSON.parse(symbolRaw.toString());
+        return <libsodiumSymbol>JSON.parse(symbolRaw.toString());
       })
     );
 
-    symbols.push(
-      {
-        inputs: [
-          {
-            name: 'a',
-            type: 'Uint8Array'
-          },
-          {
-            name: 'b',
-            type: 'Uint8Array'
-          }
-        ],
-        name: 'add',
-        noOutputFormat: true,
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'b1',
-            type: 'Uint8Array'
-          },
-          {
-            name: 'b2',
-            type: 'Uint8Array'
-          }
-        ],
-        name: 'compare',
-        noOutputFormat: true,
-        return: 'number',
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'input',
-            type: 'string'
-          },
-          {
-            name: 'variant',
-            type: 'base64_variants'
-          }
-        ],
-        name: 'from_base64',
-        noOutputFormat: true,
-        return: 'Uint8Array',
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'input',
-            type: 'string'
-          }
-        ],
-        name: 'from_hex',
-        noOutputFormat: true,
-        return: 'string',
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'str',
-            type: 'string'
-          }
-        ],
-        name: 'from_string',
-        noOutputFormat: true,
-        return: 'Uint8Array',
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'bytes',
-            type: 'Uint8Array'
-          }
-        ],
-        name: 'increment',
-        noOutputFormat: true,
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'bytes',
-            type: 'Uint8Array'
-          }
-        ],
-        name: 'is_zero',
-        noOutputFormat: true,
-        return: 'boolean',
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'b1',
-            type: 'Uint8Array'
-          },
-          {
-            name: 'b2',
-            type: 'Uint8Array'
-          }
-        ],
-        name: 'memcmp',
-        noOutputFormat: true,
-        return: 'boolean',
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'bytes',
-            type: 'Uint8Array'
-          }
-        ],
-        name: 'memzero',
-        noOutputFormat: true,
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'buf',
-            type: 'Uint8Array'
-          },
-          {
-            name: 'blocksize',
-            type: 'number'
-          }
-        ],
-        name: 'pad',
-        noOutputFormat: true,
-        return: 'Uint8Array',
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'input',
-            type: 'string | Uint8Array'
-          },
-          {
-            name: 'variant',
-            type: 'base64_variants'
-          }
-        ],
-        name: 'to_base64',
-        noOutputFormat: true,
-        return: 'string',
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'input',
-            type: 'string | Uint8Array'
-          }
-        ],
-        name: 'to_hex',
-        noOutputFormat: true,
-        return: 'string',
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'bytes',
-            type: 'Uint8Array'
-          }
-        ],
-        name: 'to_string',
-        noOutputFormat: true,
-        return: 'string',
-        type: 'function'
-      },
-      {
-        inputs: [
-          {
-            name: 'buf',
-            type: 'Uint8Array'
-          },
-          {
-            name: 'blocksize',
-            type: 'number'
-          }
-        ],
-        name: 'unpad',
-        noOutputFormat: true,
-        return: 'Uint8Array',
-        type: 'function'
-      }
-    );
+    symbols.concat(this.additionalSymbols);
 
     return symbols.sort(
       (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
     );
   }
 
-  private async getConstants(): Promise<
-    Array<libsodiumtypes.libsodiumConstant>
-  > {
+  private async getConstants(): Promise<Array<libsodiumConstant>> {
     const filePath = path.join(
       this.libsodiumLocalSource,
       'wrapper',
@@ -354,7 +146,7 @@ export default class TypeGenerator {
     const constantsRaw = await utils.promisify<Buffer>(cb =>
       fs.readFile(filePath, cb)
     );
-    const constants: Array<libsodiumtypes.libsodiumConstant> = JSON.parse(
+    const constants: Array<libsodiumConstant> = JSON.parse(
       constantsRaw.toString()
     );
 
@@ -383,9 +175,7 @@ export default class TypeGenerator {
     }
   }
 
-  private convertReturnType(
-    type: string
-  ): string | libsodiumtypes.FormattableReturnType {
+  private convertReturnType(type: string): string | FormattableReturnType {
     if (type.startsWith('{publicKey: _format_output')) {
       return { binaryType: 'KeyPair', stringType: 'StringKeyPair' };
     }
@@ -417,7 +207,7 @@ export default class TypeGenerator {
 
   private async buildData(): Promise<string> {
     const getParameters = (
-      parameterArr: Array<libsodiumtypes.libsodiumSymbolIO>,
+      parameterArr: Array<libsodiumSymbolIO>,
       formattingAvailable: boolean
     ): string => {
       let parameters = '';
@@ -467,6 +257,7 @@ export default class TypeGenerator {
     });
 
     const constants = await this.getConstants();
+
     constants.forEach(constant => {
       const convertedType = this.convertType(constant.type);
       data += `  const ${constant.name}: ${convertedType};\n`;
@@ -475,6 +266,7 @@ export default class TypeGenerator {
     data += '\n';
 
     const functions = await this.getFunctions();
+
     functions.forEach(fn => {
       if (!fn.return) {
         fn.return = 'void';
@@ -491,16 +283,14 @@ export default class TypeGenerator {
           `(${inputs}outputFormat?: Uint8ArrayOutputFormat | null): ` +
           `${returnType.binaryType};\n` +
           `  function ${fn.name}` +
-          `(${inputs}outputFormat?: StringOutputFormat | null): ` +
+          `(${inputs}outputFormat: StringOutputFormat | null): ` +
           `${returnType.stringType};\n`;
       } else {
         data += `  function ${fn.name}(${inputs}): ${returnType};\n`;
       }
     });
 
-    data += '}';
-
-    return data;
+    return data + '}';
   }
 
   public async generate(): Promise<string> {
@@ -515,6 +305,8 @@ export default class TypeGenerator {
     await utils.promisify<string>(cb =>
       fs.writeFile(this.outputFile, data, cb)
     );
+
+    await utils.promisify<void>(cb => rimraf(this.libsodiumLocalSource, cb));
 
     return this.outputFile;
   }

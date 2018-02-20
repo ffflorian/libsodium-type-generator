@@ -21,6 +21,8 @@ if (!program.output) {
 new TypeGenerator(program.output, program.base)
   .generate()
   .then(outputFile =>
-    console.log(`Success! The types file is now available at "${outputFile}."`)
+    console.log(
+      `Success! The declaration file is now available at "${outputFile}."`
+    )
   )
   .catch(error => console.error(error));

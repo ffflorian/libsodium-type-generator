@@ -129,9 +129,7 @@ export default class TypeGenerator {
       })
     );
 
-    symbols.concat(this.additionalSymbols);
-
-    return symbols.sort(
+    return symbols.concat(this.additionalSymbols).sort(
       (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
     );
   }

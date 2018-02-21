@@ -22,7 +22,7 @@
   version "9.4.6"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-9.4.6.tgz#d8176d864ee48753d053783e4e463aec86b8d82e"
 
-"@types/rimraf@^2.0.2":
+"@types/rimraf@2.0.2":
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@types/rimraf/-/rimraf-2.0.2.tgz#7f0fc3cf0ff0ad2a99bb723ae1764f30acaf8b6e"
   dependencies:
@@ -116,7 +116,7 @@ decompress-targz@^4.0.0:
     file-type "^5.2.0"
     is-stream "^1.1.0"
 
-decompress-unzip@^4.0.1:
+decompress-unzip@4.0.1, decompress-unzip@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/decompress-unzip/-/decompress-unzip-4.0.1.tgz#deaaccdfd14aeaf85578f733ae8210f9b4848f69"
   dependencies:
@@ -125,7 +125,7 @@ decompress-unzip@^4.0.1:
     pify "^2.3.0"
     yauzl "^2.4.2"
 
-decompress@^4.2.0:
+decompress@4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/decompress/-/decompress-4.2.0.tgz#7aedd85427e5a92dacfe55674a7c505e96d01f9d"
   dependencies:

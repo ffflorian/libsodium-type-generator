@@ -42,15 +42,14 @@ const httpsGetFileAsync = (
   fileName: string,
   showProgress = false
 ): Promise<string> => {
+  const MEGABYTE = 0x100000;
+  const KILOBYTE = 0x400;
+  let startedAt: number;
+
   return new Promise((resolve, reject) => {
     https
       .get(url.href, (res: http.IncomingMessage) => {
-        const MEGABYTE = 1048576;
-
         const { statusCode } = res;
-        const len = parseInt(res.headers['content-length'], 10);
-        const total = len / MEGABYTE;
-        let cur = 0;
 
         if (statusCode !== 200) {
           return reject(
@@ -59,21 +58,29 @@ const httpsGetFileAsync = (
         }
 
         const file = fs.createWriteStream(fileName);
-        res.pipe(file);
+        const length = parseInt(res.headers['content-length'], 10);
+        const total = length / MEGABYTE;
+        let transferred = 0;
 
-        res.on('data', chunk => {
-          cur += chunk.length;
-          log(`${(100.0 * cur / len).toFixed(2)} % of ${total.toFixed(2)} MB`);
-        });
-
-        res.on('end', () => {
-          log.clear();
-          resolve(fileName);
-        });
+        res
+          .on('data', chunk => {
+            transferred += chunk.length;
+            const elapsed = (Date.now() - startedAt) / 1000;
+            const percent = (100.0 * transferred / length).toFixed(2);
+            const speed = (transferred / elapsed);
+            const speedFormatted = (speed < MEGABYTE) ? `${~~(speed / KILOBYTE)} kB` : `${(speed / MEGABYTE).toFixed(2)} MB`;
+            log(`${percent} % of ${total.toFixed(2)} MB (${speedFormatted}/s)`);
+          })
+          .on('end', () => {
+            log.clear();
+            resolve(fileName);
+          })
+          .pipe(file);
       })
-      .on('error', (error: Error) => {
-        reject(`Could not download libsodium.js: ${error.message}`);
-      });
+      .on('response', () => (startedAt = Date.now()))
+      .on('error', (error: Error) =>
+        reject(`Could not download libsodium.js: ${error.message}`)
+      );
   });
 };
 

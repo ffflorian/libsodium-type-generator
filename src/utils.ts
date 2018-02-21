@@ -5,6 +5,7 @@ import * as http from 'http';
 const decompress = require('decompress');
 const decompressUnzip = require('decompress-unzip');
 const https = require('follow-redirects/https');
+const log = require('single-line-log').stdout;
 
 const checkSource = async (sourcePath: string): Promise<void> => {
   let symbolFiles: string[];
@@ -36,11 +37,20 @@ const checkSource = async (sourcePath: string): Promise<void> => {
   }
 };
 
-const httpsGetFileAsync = (url: URL, fileName: string): Promise<string> => {
+const httpsGetFileAsync = (
+  url: URL,
+  fileName: string,
+  showProgress = false
+): Promise<string> => {
   return new Promise((resolve, reject) => {
     https
       .get(url.href, (res: http.IncomingMessage) => {
+        const MEGABYTE = 1048576;
+
         const { statusCode } = res;
+        const len = parseInt(res.headers['content-length'], 10);
+        const total = len / MEGABYTE;
+        let cur = 0;
 
         if (statusCode !== 200) {
           return reject(
@@ -50,7 +60,16 @@ const httpsGetFileAsync = (url: URL, fileName: string): Promise<string> => {
 
         const file = fs.createWriteStream(fileName);
         res.pipe(file);
-        res.on('end', () => resolve(fileName));
+
+        res.on('data', chunk => {
+          cur += chunk.length;
+          log(`${(100.0 * cur / len).toFixed(2)} % of ${total.toFixed(2)} MB`);
+        });
+
+        res.on('end', () => {
+          log.clear();
+          resolve(fileName);
+        });
       })
       .on('error', (error: Error) => {
         reject(`Could not download libsodium.js: ${error.message}`);

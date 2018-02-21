@@ -59,7 +59,9 @@ export default class TypeGenerator {
     this.libsodiumVersion
   }.zip`;
 
-  private additionalSymbols: Array<libsodiumSymbol> = libsodiumTypes.additionalSymbols;
+  private additionalSymbols: Array<
+    libsodiumSymbol
+  > = libsodiumTypes.additionalSymbols;
   private enums: libsodiumEnums = libsodiumTypes.enums;
   private genericTypes: libsodiumGenericTypes = libsodiumTypes.genericTypes;
   private types: libsodiumEnums = libsodiumTypes.types;
@@ -129,9 +131,9 @@ export default class TypeGenerator {
       })
     );
 
-    return symbols.concat(this.additionalSymbols).sort(
-      (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
-    );
+    return symbols
+      .concat(this.additionalSymbols)
+      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   }
 
   private async getConstants(): Promise<Array<libsodiumConstant>> {

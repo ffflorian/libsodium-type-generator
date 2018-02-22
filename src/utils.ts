@@ -58,22 +58,28 @@ const httpsGetFileAsync = (
         }
 
         const file = fs.createWriteStream(fileName);
-        const length = parseInt(res.headers['content-length'], 10);
-        const total = length / MEGABYTE;
+        const lengthRaw = res.headers['content-length'];
+        const usesChunkedEncoding = !lengthRaw;
+        const length = usesChunkedEncoding ? 0 : parseInt(lengthRaw, 10);
+        let total = usesChunkedEncoding ? 0 : length / MEGABYTE;
         let transferred = 0;
         let elapsed = 0;
 
         res
           .on('data', chunk => {
             transferred += chunk.length;
+            if (usesChunkedEncoding) {
+              total = transferred / MEGABYTE;
+            }
             elapsed = (Date.now() - startedAt) / 1000;
             const percent = (100.0 * transferred / length).toFixed(2);
-            const speed = (transferred / elapsed);
-            const speedFormatted = (speed < MEGABYTE) ? `${~~(speed / KILOBYTE)} kB` : `${(speed / MEGABYTE).toFixed(2)} MB`;
-            log(`${percent} % of ${total.toFixed(2)} MB (${speedFormatted}/s)`);
+            const speed = transferred / elapsed;
+            const speedFormatted = speed < MEGABYTE ? `${~~(speed / KILOBYTE)} kB` : `${(speed / MEGABYTE).toFixed(2)} MB`;
+            log(`${usesChunkedEncoding ? '?' : percent + ' %'} of ${total.toFixed(2)} MB (${speedFormatted}/s)`);
           })
           .on('end', () => {
-            console.log(` in ${~~elapsed} seconds.`);
+            const seconds = ~~elapsed;
+            console.log(` in ${seconds} second${seconds === 1 ? '' : 's'}.`);
             resolve(fileName);
           })
           .pipe(file);

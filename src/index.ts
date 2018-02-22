@@ -58,6 +58,7 @@ export default class TypeGenerator {
   private externalLibsodiumSource = `https://github.com/jedisct1/libsodium.js/archive/${
     this.libsodiumVersion
   }.zip`;
+  private sourceIsSet = false;
 
   private additionalSymbols: Array<
     libsodiumSymbol
@@ -296,6 +297,8 @@ export default class TypeGenerator {
   public async generate(): Promise<string> {
     if (!this.libsodiumLocalSource) {
       this.libsodiumLocalSource = await this.downloadLibrary();
+    } else {
+      this.sourceIsSet = true;
     }
 
     utils.checkSource(this.libsodiumLocalSource);
@@ -306,7 +309,9 @@ export default class TypeGenerator {
       fs.writeFile(this.outputFile, data, cb)
     );
 
-    await utils.promisify<void>(cb => rimraf(this.libsodiumLocalSource, cb));
+    if (!this.sourceIsSet) {
+      await utils.promisify<void>(cb => rimraf(this.libsodiumLocalSource, cb));
+    }
 
     return this.outputFile;
   }

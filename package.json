@@ -33,5 +33,5 @@
     "start": "yarn dist || npm run dist && ./bin/libsodium-type-generator"
   },
   "types": "dist/index.d.ts",
-  "version": "2.0.3"
+  "version": "2.0.4"
 }

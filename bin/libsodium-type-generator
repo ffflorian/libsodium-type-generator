@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-//@ts-check
+// @ts-check
 
 const { default: TypeGenerator } = require('../dist/');
 const { description, version } = require('../package.json');
@@ -11,6 +11,10 @@ program
   .description(description)
   .option('-o, --output <file>', 'Specify the output file (required)')
   .option('-b, --base <path>', 'Specify the libsodium.js base path')
+  .option(
+    '-v, --setversion <version>',
+    'Set the version for the libsodium.js download (default is 0.7.3)'
+  )
   .parse(process.argv);
 
 if (!program.output) {
@@ -18,11 +22,23 @@ if (!program.output) {
   program.help();
 }
 
-new TypeGenerator(program.output, program.base)
+const generator = new TypeGenerator(program.output, program.base);
+if (program.setversion) {
+  if (program.base) {
+    console.info(
+      "Info: When setting a base path, the version parameter doesn't have any effect."
+    );
+  } else {
+    generator
+      .setDownloadVersion(program.setversion)
+      .catch(error => console.error(error));
+  }
+}
+generator
   .generate()
   .then(outputFile =>
     console.log(
-      `Success! The declaration file is now available at "${outputFile}."`
+      `Success! The declaration file for libsodium.js v${generator.getVersion()} is now available at "${outputFile}."`
     )
   )
   .catch(error => console.error(error));

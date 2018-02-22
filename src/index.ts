@@ -79,6 +79,13 @@ export default class TypeGenerator {
   }
 
   public async setDownloadVersion(version: string): Promise<TypeGenerator> {
+    const comparison = utils.compareVersionNumbers(
+      version,
+      this.libsodiumVersion
+    );
+    if (isNaN(comparison) || comparison < 0) {
+      throw new Error(`Minimum version is ${this.libsodiumVersion}.`);
+    }
     this.libsodiumVersion = version;
     this.externalLibsodiumSource = `https://github.com/jedisct1/libsodium.js/archive/${
       this.libsodiumVersion
@@ -110,6 +117,10 @@ export default class TypeGenerator {
     );
 
     return proposedSymbolSource;
+  }
+
+  public getVersion(): string {
+    return this.libsodiumVersion;
   }
 
   private async getFunctions(): Promise<Array<libsodiumSymbol>> {
@@ -151,10 +162,11 @@ export default class TypeGenerator {
       constantsRaw.toString()
     );
 
-    constants.push({
-      name: 'ready',
-      type: 'Promise<void>'
-    });
+    if (this.libsodiumVersion)
+      constants.push({
+        name: 'ready',
+        type: 'Promise<void>'
+      });
 
     return constants.sort(
       (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)

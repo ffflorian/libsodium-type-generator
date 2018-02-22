@@ -28,9 +28,9 @@
   "scripts": {
     "clear": "rimraf dist",
     "build": "tsc",
-    "dist": "yarn clear && yarn build",
+    "dist": "yarn clear || npm run clear && yarn build || npm run build",
     "prettier": "prettier --single-quote --write src/*.ts bin/*",
-    "start": "yarn dist && ./bin/libsodium-type-generator"
+    "start": "yarn dist || npm run dist && ./bin/libsodium-type-generator"
   },
   "types": "dist/index.d.ts",
   "version": "2.0.2"

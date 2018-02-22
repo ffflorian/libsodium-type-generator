@@ -37,6 +37,55 @@ const checkSource = async (sourcePath: string): Promise<void> => {
   }
 };
 
+/**
+ * Compare two software version numbers (e.g. 1.7.1)
+ * Returns:
+ *
+ *  `0` if they're identical, negative if `v1` < `v2`,
+ *  positive if `v1` > `v2`, `NaN` if they're in the wrong format.
+ *
+ *  Taken from http://stackoverflow.com/a/6832721/11236.
+ */
+const compareVersionNumbers = (version1: string, version2: string): number => {
+  var v1parts = version1.split('.');
+  var v2parts = version2.split('.');
+
+  const isPositiveInteger = (x: string) => /^\d+$/.test(x);
+
+  const validateParts = (parts: Array<string>) => {
+    for (var i = 0; i < parts.length; ++i) {
+      if (!isPositiveInteger(parts[i])) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  if (!validateParts(v1parts) || !validateParts(v2parts)) {
+    return NaN;
+  }
+
+  for (var i = 0; i < v1parts.length; ++i) {
+    if (v2parts.length === i) {
+      return 1;
+    }
+
+    if (v1parts[i] === v2parts[i]) {
+      continue;
+    }
+    if (v1parts[i] > v2parts[i]) {
+      return 1;
+    }
+    return -1;
+  }
+
+  if (v1parts.length != v2parts.length) {
+    return -1;
+  }
+
+  return 0;
+};
+
 const httpsGetFileAsync = (
   url: URL,
   fileName: string,
@@ -74,8 +123,15 @@ const httpsGetFileAsync = (
             elapsed = (Date.now() - startedAt) / 1000;
             const percent = (100.0 * transferred / length).toFixed(2);
             const speed = transferred / elapsed;
-            const speedFormatted = speed < MEGABYTE ? `${~~(speed / KILOBYTE)} kB` : `${(speed / MEGABYTE).toFixed(2)} MB`;
-            log(`${usesChunkedEncoding ? '?' : percent + ' %'} of ${total.toFixed(2)} MB (${speedFormatted}/s)`);
+            const speedFormatted =
+              speed < MEGABYTE
+                ? `${~~(speed / KILOBYTE)} kB`
+                : `${(speed / MEGABYTE).toFixed(2)} MB`;
+            log(
+              `${usesChunkedEncoding ? '?' : percent + ' %'} of ${total.toFixed(
+                2
+              )} MB (${speedFormatted}/s)`
+            );
           })
           .on('end', () => {
             const seconds = ~~elapsed;
@@ -105,4 +161,9 @@ const promisify = <T>(
   });
 };
 
-export default { checkSource, httpsGetFileAsync, promisify };
+export default {
+  checkSource,
+  compareVersionNumbers,
+  httpsGetFileAsync,
+  promisify
+};

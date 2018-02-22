@@ -31,7 +31,10 @@ if (program.setversion) {
   } else {
     generator
       .setDownloadVersion(program.setversion)
-      .catch(error => console.error(error));
+      .catch(error => {
+        console.error(error);
+        process.exit();
+      });
   }
 }
 generator

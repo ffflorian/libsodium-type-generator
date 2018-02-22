@@ -61,18 +61,19 @@ const httpsGetFileAsync = (
         const length = parseInt(res.headers['content-length'], 10);
         const total = length / MEGABYTE;
         let transferred = 0;
+        let elapsed = 0;
 
         res
           .on('data', chunk => {
             transferred += chunk.length;
-            const elapsed = (Date.now() - startedAt) / 1000;
+            elapsed = (Date.now() - startedAt) / 1000;
             const percent = (100.0 * transferred / length).toFixed(2);
             const speed = (transferred / elapsed);
             const speedFormatted = (speed < MEGABYTE) ? `${~~(speed / KILOBYTE)} kB` : `${(speed / MEGABYTE).toFixed(2)} MB`;
             log(`${percent} % of ${total.toFixed(2)} MB (${speedFormatted}/s)`);
           })
           .on('end', () => {
-            log.clear();
+            console.log(` in ${~~elapsed} seconds.`);
             resolve(fileName);
           })
           .pipe(file);

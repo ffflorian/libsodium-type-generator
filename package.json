@@ -14,7 +14,7 @@
     "@types/node": "9.4.6",
     "@types/rimraf": "2.0.2",
     "@types/tmp": "0.0.33",
-    "prettier": "1.10.2",
+    "prettier": "1.11.0",
     "typescript": "2.7.1"
   },
   "files": [

@@ -30,7 +30,8 @@
     "build": "tsc",
     "dist": "yarn clear || npm run clear && yarn build || npm run build",
     "prettier": "prettier --single-quote --write src/*.ts bin/*",
-    "start": "yarn dist || npm run dist && ./bin/libsodium-type-generator"
+    "start": "yarn dist || npm run dist && ./bin/libsodium-type-generator",
+    "test": "exit 0"
   },
   "types": "dist/index.d.ts",
   "version": "2.0.4"

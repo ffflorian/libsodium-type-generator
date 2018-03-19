@@ -190,9 +190,11 @@ export default class TypeGenerator {
         const convertedType = this.convertType(param.type);
         const optional = param.type.includes('optional');
 
-        parameters += `${param.name}: ${convertedType}${optional ? ' | null' : ''}${
-          isLast ? (formattingAvailable ? ', ' : '') : ', '
-        }`;
+        parameters += `${param.name}: ` +
+                      convertedType +
+                      optional ? ' | null' : '' +
+                      isLast ? (formattingAvailable ? ', ' : '') : ', '
+        ;
       });
       return parameters;
     };
@@ -216,9 +218,7 @@ export default class TypeGenerator {
 
     Object.keys(this.enums).forEach(enumName => {
       data += `  enum ${enumName} {\n`;
-      this.enums[enumName].forEach(enumValue => {
-        data += `    ${enumValue},\n`;
-      });
+      this.enums[enumName].forEach(enumValue => (data += `    ${enumValue},\n`));
       data += `  }\n\n`;
     });
 
@@ -253,10 +253,11 @@ export default class TypeGenerator {
         data +=
           `  function ${fn.name}` +
           `(${inputs}outputFormat?: Uint8ArrayOutputFormat | null): ` +
-          `${returnType.binaryType};\n` +
+          returnType.binaryType + ';\n' +
+
           `  function ${fn.name}` +
           `(${inputs}outputFormat: StringOutputFormat | null): ` +
-          `${returnType.stringType};\n`;
+          returnType.stringType + ';\n';
       } else {
         data += `  function ${fn.name}(${inputs}): ${returnType};\n`;
       }

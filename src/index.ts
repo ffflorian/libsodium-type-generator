@@ -59,9 +59,7 @@ export default class TypeGenerator {
   private libsodiumVersion = '0.7.3';
   private sourceIsSet = false;
 
-  private additionalSymbols: Array<
-    libsodiumSymbol
-  > = libsodiumTypes.additionalSymbols;
+  private additionalSymbols: Array<libsodiumSymbol> = libsodiumTypes.additionalSymbols;
   private enums: libsodiumEnums = libsodiumTypes.enums;
   private genericTypes: libsodiumGenericTypes = libsodiumTypes.genericTypes;
   private types: libsodiumEnums = libsodiumTypes.types;
@@ -70,18 +68,12 @@ export default class TypeGenerator {
    * @param outputFileOrDir Where to write the libsodium.js declarationfile
    * @param libsodiumLocalSource The source of the libsodium.js library (local path)
    */
-  constructor(
-    public outputFileOrDir: string,
-    private libsodiumLocalSource?: string
-  ) {
+  constructor(public outputFileOrDir: string, private libsodiumLocalSource?: string) {
     this.outputFileOrDir = path.resolve(this.outputFileOrDir);
   }
 
   public async setDownloadVersion(version: string): Promise<TypeGenerator> {
-    const comparison = utils.compareVersionNumbers(
-      version,
-      this.libsodiumVersion
-    );
+    const comparison = utils.compareVersionNumbers(version, this.libsodiumVersion);
     if (isNaN(comparison) || comparison < 0) {
       throw new Error(`Minimum version is ${this.libsodiumVersion}.`);
     }
@@ -91,19 +83,15 @@ export default class TypeGenerator {
   }
 
   private get externalLibsodiumSource(): string {
-    return `https://github.com/jedisct1/libsodium.js/archive/${
-      this.libsodiumVersion
-    }.zip`;
+    return `https://github.com/jedisct1/libsodium.js/archive/${this.libsodiumVersion}.zip`;
   }
 
   private async downloadLibrary(): Promise<string> {
-    console.info(
-      `Downloading libsodium.js from "${this.externalLibsodiumSource}" ...`
-    );
+    console.info(`Downloading libsodium.js from "${this.externalLibsodiumSource}" ...`);
 
     let tmpPath: string;
     try {
-      tmpPath = os.tmpdir()
+      tmpPath = os.tmpdir();
     } catch (err) {
       throw new Error(`Could not create temp dir: ${err.message}`);
     }
@@ -112,10 +100,7 @@ export default class TypeGenerator {
     const file = await utils.httpsGetFileAsync(zipURL, downloadFileName);
     await decompress(file, tmpPath, { plugins: [decompressUnzip()] });
 
-    const proposedSymbolSource = path.join(
-      tmpPath,
-      `libsodium.js-${this.libsodiumVersion}`
-    );
+    const proposedSymbolSource = path.join(tmpPath, `libsodium.js-${this.libsodiumVersion}`);
 
     return proposedSymbolSource;
   }
@@ -125,47 +110,33 @@ export default class TypeGenerator {
   }
 
   private async getFunctions(): Promise<Array<libsodiumSymbol>> {
-    const symbolPath = path.join(
-      this.libsodiumLocalSource,
-      'wrapper',
-      'symbols'
-    );
+    const symbolPath = path.join(this.libsodiumLocalSource, 'wrapper', 'symbols');
 
     const symbolFiles = await promisify(fs.readdir)(symbolPath);
 
     const symbols = await Promise.all(
       symbolFiles.map(async symbolFile => {
-        const symbolRaw = await promisify(fs.readFile)(path.join(symbolPath, symbolFile))
+        const symbolRaw = await promisify(fs.readFile)(path.join(symbolPath, symbolFile));
         return <libsodiumSymbol>JSON.parse(symbolRaw.toString());
-      })
+      }),
     );
 
-    return symbols
-      .concat(this.additionalSymbols)
-      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    return symbols.concat(this.additionalSymbols).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   }
 
   private async getConstants(): Promise<Array<libsodiumConstant>> {
-    const filePath = path.join(
-      this.libsodiumLocalSource,
-      'wrapper',
-      'constants.json'
-    );
+    const filePath = path.join(this.libsodiumLocalSource, 'wrapper', 'constants.json');
 
     const constantsRaw = await promisify(fs.readFile)(filePath);
-    const constants: Array<libsodiumConstant> = JSON.parse(
-      constantsRaw.toString()
-    );
+    const constants: Array<libsodiumConstant> = JSON.parse(constantsRaw.toString());
 
     if (this.libsodiumVersion)
       constants.push({
         name: 'ready',
-        type: 'Promise<void>'
+        type: 'Promise<void>',
       });
 
-    return constants.sort(
-      (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
-    );
+    return constants.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   }
 
   private convertType(type: string): string {
@@ -193,9 +164,7 @@ export default class TypeGenerator {
     if (type.startsWith('_format_output({mac: mac, cipher: cipher}')) {
       return { binaryType: 'SecretBox', stringType: 'StringSecretBox' };
     }
-    if (
-      type.startsWith('_format_output({sharedRx: sharedRx, sharedTx: sharedTx}')
-    ) {
+    if (type.startsWith('_format_output({sharedRx: sharedRx, sharedTx: sharedTx}')) {
       return { binaryType: 'CryptoKX', stringType: 'StringCryptoKX' };
     }
     if (type === 'random_value') {
@@ -214,19 +183,16 @@ export default class TypeGenerator {
   }
 
   private async buildData(): Promise<string> {
-    const getParameters = (
-      parameterArr: Array<libsodiumSymbolIO>,
-      formattingAvailable: boolean
-    ): string => {
+    const getParameters = (parameterArr: Array<libsodiumSymbolIO>, formattingAvailable: boolean): string => {
       let parameters = '';
       parameterArr.forEach((param, index) => {
         const isLast = index === parameterArr.length - 1;
         const convertedType = this.convertType(param.type);
         const optional = param.type.includes('optional');
 
-        parameters += `${param.name}: ${convertedType}${
-          optional ? ' | null' : ''
-        }${isLast ? (formattingAvailable ? ', ' : '') : ', '}`;
+        parameters += `${param.name}: ${convertedType}${optional ? ' | null' : ''}${
+          isLast ? (formattingAvailable ? ', ' : '') : ', '
+        }`;
       });
       return parameters;
     };
@@ -280,9 +246,7 @@ export default class TypeGenerator {
         fn.return = 'void';
       }
       const formattingAvailable = fn.return.includes('_format_output');
-      const inputs = fn.inputs
-        ? getParameters(fn.inputs, formattingAvailable)
-        : '';
+      const inputs = fn.inputs ? getParameters(fn.inputs, formattingAvailable) : '';
       const returnType = this.convertReturnType(fn.return);
 
       if (typeof returnType === 'object') {

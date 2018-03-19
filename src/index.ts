@@ -59,13 +59,13 @@ export default class TypeGenerator {
   private libsodiumVersion = '0.7.3';
   private sourceIsSet = false;
 
-  private additionalSymbols: Array<libsodiumSymbol> = libsodiumTypes.additionalSymbols;
-  private enums: libsodiumEnums = libsodiumTypes.enums;
-  private genericTypes: libsodiumGenericTypes = libsodiumTypes.genericTypes;
-  private types: libsodiumEnums = libsodiumTypes.types;
+  private readonly additionalSymbols: Array<libsodiumSymbol> = libsodiumTypes.additionalSymbols;
+  private readonly enums: libsodiumEnums = libsodiumTypes.enums;
+  private readonly genericTypes: libsodiumGenericTypes = libsodiumTypes.genericTypes;
+  private readonly types: libsodiumEnums = libsodiumTypes.types;
 
   /**
-   * @param outputFileOrDir Where to write the libsodium.js declarationfile
+   * @param outputFileOrDir Where to write the libsodium.js declaration file
    * @param libsodiumLocalSource The source of the libsodium.js library (local path)
    */
   constructor(public outputFileOrDir: string, private libsodiumLocalSource?: string) {
@@ -121,7 +121,9 @@ export default class TypeGenerator {
       })
     );
 
-    return symbols.concat(this.additionalSymbols).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    return symbols
+      .concat(this.additionalSymbols)
+      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   }
 
   private async getConstants(): Promise<Array<libsodiumConstant>> {
@@ -190,11 +192,7 @@ export default class TypeGenerator {
         const convertedType = this.convertType(param.type);
         const optional = param.type.includes('optional');
 
-        parameters += `${param.name}: ` +
-                      convertedType +
-                      optional ? ' | null' : '' +
-                      isLast ? (formattingAvailable ? ', ' : '') : ', '
-        ;
+        parameters += `${param.name}: ` + convertedType + (optional ? ' | null' : '') + (isLast && !formattingAvailable ? '' : ', ');
       });
       return parameters;
     };

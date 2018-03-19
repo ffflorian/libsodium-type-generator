@@ -118,7 +118,7 @@ export default class TypeGenerator {
       symbolFiles.map(async symbolFile => {
         const symbolRaw = await promisify(fs.readFile)(path.join(symbolPath, symbolFile));
         return <libsodiumSymbol>JSON.parse(symbolRaw.toString());
-      }),
+      })
     );
 
     return symbols.concat(this.additionalSymbols).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));

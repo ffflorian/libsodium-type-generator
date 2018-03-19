@@ -97,7 +97,7 @@ export default class TypeGenerator {
   }
 
   private async downloadLibrary(): Promise<string> {
-    console.log(
+    console.info(
       `Downloading libsodium.js from "${this.externalLibsodiumSource}" ...`
     );
 
@@ -105,7 +105,7 @@ export default class TypeGenerator {
     try {
       tmpPath = os.tmpdir()
     } catch (err) {
-      console.error('Could not create temp dir:', err.message);
+      throw new Error(`Could not create temp dir: ${err.message}`);
     }
     const zipURL = new URL(this.externalLibsodiumSource);
     const downloadFileName = path.join(tmpPath, 'libsodium.zip');

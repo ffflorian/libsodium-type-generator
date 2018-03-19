@@ -194,6 +194,7 @@ export default class TypeGenerator {
 
         parameters += `${param.name}: ` + convertedType + (optional ? ' | null' : '') + (isLast && !formattingAvailable ? '' : ', ');
       });
+
       return parameters;
     };
 

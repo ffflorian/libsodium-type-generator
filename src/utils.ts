@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as http from 'http';
+import { promisify } from 'util';
 
 const decompress = require('decompress');
 const decompressUnzip = require('decompress-unzip');
@@ -13,9 +14,7 @@ const checkSource = async (sourcePath: string): Promise<void> => {
   const constantsFile = path.join(sourcePath, 'wrapper', 'constants.json');
 
   try {
-    symbolFiles = await promisify<Array<string>>(cb => {
-      fs.readdir(symbolPath, cb);
-    });
+    symbolFiles = await promisify(fs.readdir)(symbolPath);
   } catch (error) {
     throw new Error(
       `Could not find symbols in ${symbolPath} from downloaded ZIP file.`
@@ -147,23 +146,8 @@ const httpsGetFileAsync = (
   });
 };
 
-const promisify = <T>(
-  resolver: (callback: (err?: Error, value?: T) => void) => void
-): Promise<T> => {
-  return new Promise<T>((resolve, reject) => {
-    resolver((err, value): void => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(value);
-      }
-    });
-  });
-};
-
-export default {
+export {
   checkSource,
   compareVersionNumbers,
   httpsGetFileAsync,
-  promisify
 };

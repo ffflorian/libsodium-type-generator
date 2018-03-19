@@ -1,10 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as tmp from 'tmp';
-import { URL } from 'url';
 import * as rimraf from 'rimraf';
+import * as os from 'os';
+import { promisify } from 'util';
+import { URL } from 'url';
+
 import libsodiumTypes from './libsodiumTypes';
-import utils from './utils';
+import * as utils from './utils';
 
 const decompress = require('decompress');
 const decompressUnzip = require('decompress-unzip');
@@ -55,66 +57,50 @@ interface libsodiumEnums {
 export default class TypeGenerator {
   private constants: Array<libsodiumConstant>;
   private libsodiumVersion = '0.7.3';
-  private externalLibsodiumSource = `https://github.com/jedisct1/libsodium.js/archive/${
-    this.libsodiumVersion
-  }.zip`;
   private sourceIsSet = false;
 
-  private additionalSymbols: Array<
-    libsodiumSymbol
-  > = libsodiumTypes.additionalSymbols;
-  private enums: libsodiumEnums = libsodiumTypes.enums;
-  private genericTypes: libsodiumGenericTypes = libsodiumTypes.genericTypes;
-  private types: libsodiumEnums = libsodiumTypes.types;
+  private readonly additionalSymbols: Array<libsodiumSymbol> = libsodiumTypes.additionalSymbols;
+  private readonly enums: libsodiumEnums = libsodiumTypes.enums;
+  private readonly genericTypes: libsodiumGenericTypes = libsodiumTypes.genericTypes;
+  private readonly types: libsodiumEnums = libsodiumTypes.types;
 
   /**
-   * @param outputFile Where to write the libsodium.js declarationfile
+   * @param outputFileOrDir Where to write the libsodium.js declaration file
    * @param libsodiumLocalSource The source of the libsodium.js library (local path)
    */
-  constructor(
-    public outputFile: string,
-    private libsodiumLocalSource?: string
-  ) {
-    this.outputFile = path.resolve(this.outputFile);
+  constructor(public outputFileOrDir: string, private libsodiumLocalSource?: string) {
+    this.outputFileOrDir = path.resolve(this.outputFileOrDir);
   }
 
   public async setDownloadVersion(version: string): Promise<TypeGenerator> {
-    const comparison = utils.compareVersionNumbers(
-      version,
-      this.libsodiumVersion
-    );
+    const comparison = utils.compareVersionNumbers(version, this.libsodiumVersion);
     if (isNaN(comparison) || comparison < 0) {
       throw new Error(`Minimum version is ${this.libsodiumVersion}.`);
     }
-    this.libsodiumVersion = version;
-    this.externalLibsodiumSource = `https://github.com/jedisct1/libsodium.js/archive/${
-      this.libsodiumVersion
-    }.zip`;
 
+    this.libsodiumVersion = version;
     return this;
   }
 
-  private async downloadLibrary(): Promise<string> {
-    console.log(
-      `Downloading libsodium.js from "${this.externalLibsodiumSource}" ...`
-    );
+  private get externalLibsodiumSource(): string {
+    return `https://github.com/jedisct1/libsodium.js/archive/${this.libsodiumVersion}.zip`;
+  }
 
-    const tmpPath = await utils.promisify<any>(cb => {
-      try {
-        tmp.dir(cb);
-      } catch (err) {
-        console.error('Could not create temp dir:', err.message);
-      }
-    });
+  private async downloadLibrary(): Promise<string> {
+    console.info(`Downloading libsodium.js from "${this.externalLibsodiumSource}" ...`);
+
+    let tmpPath: string;
+    try {
+      tmpPath = os.tmpdir();
+    } catch (err) {
+      throw new Error(`Could not create temp dir: ${err.message}`);
+    }
     const zipURL = new URL(this.externalLibsodiumSource);
     const downloadFileName = path.join(tmpPath, 'libsodium.zip');
     const file = await utils.httpsGetFileAsync(zipURL, downloadFileName);
     await decompress(file, tmpPath, { plugins: [decompressUnzip()] });
 
-    const proposedSymbolSource = path.join(
-      tmpPath,
-      `libsodium.js-${this.libsodiumVersion}`
-    );
+    const proposedSymbolSource = path.join(tmpPath, `libsodium.js-${this.libsodiumVersion}`);
 
     return proposedSymbolSource;
   }
@@ -124,21 +110,13 @@ export default class TypeGenerator {
   }
 
   private async getFunctions(): Promise<Array<libsodiumSymbol>> {
-    const symbolPath = path.join(
-      this.libsodiumLocalSource,
-      'wrapper',
-      'symbols'
-    );
+    const symbolPath = path.join(this.libsodiumLocalSource, 'wrapper', 'symbols');
 
-    const symbolFiles = await utils.promisify<Array<string>>(cb =>
-      fs.readdir(symbolPath, cb)
-    );
+    const symbolFiles = await promisify(fs.readdir)(symbolPath);
 
     const symbols = await Promise.all(
       symbolFiles.map(async symbolFile => {
-        const symbolRaw = await utils.promisify<Buffer>(cb =>
-          fs.readFile(path.join(symbolPath, symbolFile), cb)
-        );
+        const symbolRaw = await promisify(fs.readFile)(path.join(symbolPath, symbolFile));
         return <libsodiumSymbol>JSON.parse(symbolRaw.toString());
       })
     );
@@ -149,28 +127,18 @@ export default class TypeGenerator {
   }
 
   private async getConstants(): Promise<Array<libsodiumConstant>> {
-    const filePath = path.join(
-      this.libsodiumLocalSource,
-      'wrapper',
-      'constants.json'
-    );
+    const filePath = path.join(this.libsodiumLocalSource, 'wrapper', 'constants.json');
 
-    const constantsRaw = await utils.promisify<Buffer>(cb =>
-      fs.readFile(filePath, cb)
-    );
-    const constants: Array<libsodiumConstant> = JSON.parse(
-      constantsRaw.toString()
-    );
+    const constantsRaw = await promisify(fs.readFile)(filePath);
+    const constants: Array<libsodiumConstant> = JSON.parse(constantsRaw.toString());
 
     if (this.libsodiumVersion)
       constants.push({
         name: 'ready',
-        type: 'Promise<void>'
+        type: 'Promise<void>',
       });
 
-    return constants.sort(
-      (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
-    );
+    return constants.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   }
 
   private convertType(type: string): string {
@@ -198,9 +166,7 @@ export default class TypeGenerator {
     if (type.startsWith('_format_output({mac: mac, cipher: cipher}')) {
       return { binaryType: 'SecretBox', stringType: 'StringSecretBox' };
     }
-    if (
-      type.startsWith('_format_output({sharedRx: sharedRx, sharedTx: sharedTx}')
-    ) {
+    if (type.startsWith('_format_output({sharedRx: sharedRx, sharedTx: sharedTx}')) {
       return { binaryType: 'CryptoKX', stringType: 'StringCryptoKX' };
     }
     if (type === 'random_value') {
@@ -219,25 +185,21 @@ export default class TypeGenerator {
   }
 
   private async buildData(): Promise<string> {
-    const getParameters = (
-      parameterArr: Array<libsodiumSymbolIO>,
-      formattingAvailable: boolean
-    ): string => {
+    const getParameters = (parameterArr: Array<libsodiumSymbolIO>, formattingAvailable: boolean): string => {
       let parameters = '';
       parameterArr.forEach((param, index) => {
         const isLast = index === parameterArr.length - 1;
         const convertedType = this.convertType(param.type);
         const optional = param.type.includes('optional');
 
-        parameters += `${param.name}: ${convertedType}${
-          optional ? ' | null' : ''
-        }${isLast ? (formattingAvailable ? ', ' : '') : ', '}`;
+        parameters += `${param.name}: ` + convertedType + (optional ? ' | null' : '') + (isLast && !formattingAvailable ? '' : ', ');
       });
+
       return parameters;
     };
 
     let data =
-      '// Type definitions for libsodium-wrappers-sumo 0.7.3\n' +
+      `// Type definitions for libsodium-wrappers-sumo ${this.libsodiumVersion}\n` +
       '// Project: https://github.com/jedisct1/libsodium.js\n' +
       '// Definitions by: Florian Keller <https://github.com/ffflorian>\n\n' +
       `declare module 'libsodium-wrappers-sumo' {\n`;
@@ -255,9 +217,7 @@ export default class TypeGenerator {
 
     Object.keys(this.enums).forEach(enumName => {
       data += `  enum ${enumName} {\n`;
-      this.enums[enumName].forEach(enumValue => {
-        data += `    ${enumValue},\n`;
-      });
+      this.enums[enumName].forEach(enumValue => (data += `    ${enumValue},\n`));
       data += `  }\n\n`;
     });
 
@@ -285,19 +245,18 @@ export default class TypeGenerator {
         fn.return = 'void';
       }
       const formattingAvailable = fn.return.includes('_format_output');
-      const inputs = fn.inputs
-        ? getParameters(fn.inputs, formattingAvailable)
-        : '';
+      const inputs = fn.inputs ? getParameters(fn.inputs, formattingAvailable) : '';
       const returnType = this.convertReturnType(fn.return);
 
       if (typeof returnType === 'object') {
         data +=
           `  function ${fn.name}` +
           `(${inputs}outputFormat?: Uint8ArrayOutputFormat | null): ` +
-          `${returnType.binaryType};\n` +
+          returnType.binaryType + ';\n' +
+
           `  function ${fn.name}` +
           `(${inputs}outputFormat: StringOutputFormat | null): ` +
-          `${returnType.stringType};\n`;
+          returnType.stringType + ';\n';
       } else {
         data += `  function ${fn.name}(${inputs}): ${returnType};\n`;
       }
@@ -307,24 +266,27 @@ export default class TypeGenerator {
   }
 
   public async generate(): Promise<string> {
-    if (!this.libsodiumLocalSource) {
-      this.libsodiumLocalSource = await this.downloadLibrary();
-    } else {
+    if (this.libsodiumLocalSource) {
       this.sourceIsSet = true;
+    } else {
+      this.libsodiumLocalSource = await this.downloadLibrary();
     }
 
-    utils.checkSource(this.libsodiumLocalSource);
+    await utils.checkSource(this.libsodiumLocalSource);
 
     const data = await this.buildData();
 
-    await utils.promisify<string>(cb =>
-      fs.writeFile(this.outputFile, data, cb)
-    );
-
-    if (!this.sourceIsSet) {
-      await utils.promisify<void>(cb => rimraf(this.libsodiumLocalSource, cb));
+    const outputFileOrDirStats = await promisify(fs.lstat)(this.outputFileOrDir);
+    if (outputFileOrDirStats.isDirectory()) {
+      this.outputFileOrDir = path.resolve(this.outputFileOrDir, 'libsodium.d.ts');
     }
 
-    return this.outputFile;
+    await promisify(fs.writeFile)(this.outputFileOrDir, data);
+
+    if (!this.sourceIsSet) {
+      await promisify(rimraf)(this.libsodiumLocalSource);
+    }
+
+    return this.outputFileOrDir;
   }
 }

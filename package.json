@@ -10,7 +10,7 @@
     "single-line-log": "1.1.2"
   },
   "devDependencies": {
-    "@types/node": "9.4.7",
+    "@types/node": "9.6.0",
     "@types/rimraf": "2.0.2",
     "prettier": "1.11.1",
     "typescript": "2.7.1"

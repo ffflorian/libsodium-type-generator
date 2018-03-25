@@ -2,8 +2,6 @@
 
 This is a TypeScript declaration file generator for [`libsodium.js`](https://github.com/jedisct1/libsodium.js).
 
-For now this generates only the types for `libsodium-wrappers-sumo`.
-
 
 ## Installation
 ```
@@ -18,12 +16,12 @@ npm install -g libsodium-type-generator
 ```
 Usage: libsodium-type-generator [options]
 
-
 Options:
 
   -V, --version               output the version number
-  -o, --output <file>         Specify the output file (required)
+  -o, --output <file|dir>     Specify the output file or directory (required)
   -b, --base <path>           Specify the libsodium.js base path
+  -s, --sumo                  Generate types for the sumo version
   -v, --setversion <version>  Set the version for the libsodium.js download (default is 0.7.3)
   -h, --help                  output usage information
 ```

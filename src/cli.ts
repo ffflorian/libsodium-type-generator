@@ -3,9 +3,10 @@
 import TypeGenerator from './';
 import program = require('commander');
 
-const { description, version } = require('../package.json');
+const { description, name, version } = require('../package.json');
 
 program
+  .name(name)
   .version(version)
   .description(description)
   .option(

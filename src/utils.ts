@@ -146,8 +146,4 @@ const httpsGetFileAsync = (
   });
 };
 
-export {
-  checkSource,
-  compareVersionNumbers,
-  httpsGetFileAsync,
-};
+export { checkSource, compareVersionNumbers, httpsGetFileAsync };

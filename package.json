@@ -4,7 +4,6 @@
     "libsodium-type-generator": "dist/cli.js"
   },
   "dependencies": {
-    "@types/decompress": "4.2.1",
     "commander": "2.15.1",
     "decompress": "4.2.0",
     "decompress-unzip": "4.0.1",
@@ -13,6 +12,7 @@
     "single-line-log": "1.1.2"
   },
   "devDependencies": {
+    "@types/decompress": "4.2.1",
     "@types/node": "9.6.0",
     "@types/rimraf": "2.0.2",
     "prettier": "1.11.1",
@@ -31,7 +31,6 @@
     "build": "tsc",
     "dist": "yarn-or-npm run clear && yarn-or-npm build",
     "prettier": "prettier --single-quote --write src/*.ts",
-    "start": "yarn-or-npm dist && yarn-or-npm exec libsodium-type-generator",
     "test": "exit 0"
   },
   "types": "dist/index.d.ts",

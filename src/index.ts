@@ -10,7 +10,7 @@ const decompressUnzip = require('decompress-unzip');
 const http = require('follow-redirects/http');
 
 import libsodiumTypes from './libsodiumTypes';
-import sumoOnlyFunctions from './sumoOnlyFunctions';
+import sumoOnlySymbols from './sumoOnlySymbols';
 import * as utils from './utils';
 
 interface FormattableReturnType {
@@ -272,7 +272,13 @@ export default class TypeGenerator {
       data += `  }\n\n`;
     });
 
-    const constants = await this.getConstants();
+    let constants = await this.getConstants();
+
+    if (!sumo) {
+      constants = constants.filter(
+        constant => !sumoOnlySymbols.includes(constant.name.toLowerCase())
+      );
+    }
 
     constants.forEach(constant => {
       const convertedType = this.convertType(constant.type);
@@ -285,7 +291,7 @@ export default class TypeGenerator {
 
     if (!sumo) {
       functions = functions.filter(
-        func => !sumoOnlyFunctions.includes(func.name)
+        func => !sumoOnlySymbols.includes(func.name.toLowerCase())
       );
     }
 

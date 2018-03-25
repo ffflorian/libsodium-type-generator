@@ -1,4 +1,4 @@
-const sumoOnlyFunctions = [
+const sumoOnlySymbols = [
   'crypto_auth_hmacsha256',
   'crypto_auth_hmacsha256_bytes',
   'crypto_auth_hmacsha256_final',
@@ -324,4 +324,4 @@ const sumoOnlyFunctions = [
   'randombytes_implementation_name'
 ];
 
-export default sumoOnlyFunctions;
+export default sumoOnlySymbols;

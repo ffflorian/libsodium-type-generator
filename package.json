@@ -1,7 +1,10 @@
 {
   "author": "Florian Keller <github@floriankeller.de>",
-  "bin": "bin/libsodium-type-generator",
+  "bin": {
+    "libsodium-type-generator": "dist/cli.js"
+  },
   "dependencies": {
+    "@types/decompress": "4.2.1",
     "commander": "2.15.1",
     "decompress": "4.2.0",
     "decompress-unzip": "4.0.1",
@@ -13,10 +16,10 @@
     "@types/node": "9.6.0",
     "@types/rimraf": "2.0.2",
     "prettier": "1.11.1",
-    "typescript": "2.7.1"
+    "typescript": "2.7.1",
+    "yarn-or-npm": "2.0.4"
   },
   "files": [
-    "bin",
     "dist"
   ],
   "license": "MIT",
@@ -26,9 +29,9 @@
   "scripts": {
     "clear": "rimraf dist",
     "build": "tsc",
-    "dist": "yarn clear || npm run clear && yarn build || npm run build",
-    "prettier": "prettier --single-quote --write src/*.ts bin/*",
-    "start": "yarn dist || npm run dist && ./bin/libsodium-type-generator",
+    "dist": "yarn-or-npm run clear && yarn-or-npm build",
+    "prettier": "prettier --single-quote --write src/*.ts",
+    "start": "yarn-or-npm dist && yarn-or-npm exec libsodium-type-generator",
     "test": "exit 0"
   },
   "types": "dist/index.d.ts",

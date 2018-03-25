@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 
-// @ts-check
+import TypeGenerator from './';
+import program = require('commander');
 
-const { default: TypeGenerator } = require('../dist/');
 const { description, version } = require('../package.json');
-const program = require('commander');
 
 program
   .version(version)
   .description(description)
-  .option('-o, --output <file|dir>', 'Specify the output file or directory (required)')
+  .option(
+    '-o, --output <file|dir>',
+    'Specify the output file or directory (required)'
+  )
   .option('-b, --base <path>', 'Specify the libsodium.js base path')
+  .option('-s, --sumo', 'Generate types for the sumo version')
   .option(
     '-v, --setversion <version>',
     'Set the version for the libsodium.js download (default is 0.7.3)'
@@ -29,19 +32,20 @@ if (program.setversion) {
       "Info: When setting a base path, the version parameter doesn't have any effect."
     );
   } else {
-    generator
-      .setDownloadVersion(program.setversion)
-      .catch(error => {
-        console.error(error);
-        process.exit();
-      });
+    generator.setDownloadVersion(program.setversion).catch(error => {
+      console.error(error);
+      process.exit();
+    });
   }
 }
+
 generator
-  .generate()
+  .generate(program.sumo)
   .then(outputFile =>
     console.log(
-      `Success! The declaration file for libsodium.js v${generator.getVersion()} is now available at "${outputFile}."`
+      `Success! The declaration file for libsodium.js v${generator.getVersion()}${
+        program.sumo ? ' (sumo)' : ''
+      } is now available at "${outputFile}."`
     )
   )
   .catch(error => console.error(error));

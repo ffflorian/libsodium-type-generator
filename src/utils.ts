@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as http from 'http';
+import * as tmp from 'tmp';
 import { promisify } from 'util';
 
 const decompress = require('decompress');
@@ -85,6 +86,16 @@ const compareVersionNumbers = (version1: string, version2: string): number => {
   return 0;
 };
 
+const createTmp = (): Promise<string> =>
+  new Promise((resolve, reject) =>
+    tmp.dir((err, path) => {
+      if (err || !path) {
+        return void reject(err || 'No path from tmp received.');
+      }
+      return void resolve(path);
+    })
+  );
+
 const httpsGetFileAsync = (
   url: URL,
   fileName: string,
@@ -146,4 +157,4 @@ const httpsGetFileAsync = (
   });
 };
 
-export { checkSource, compareVersionNumbers, httpsGetFileAsync };
+export { checkSource, compareVersionNumbers, createTmp, httpsGetFileAsync };

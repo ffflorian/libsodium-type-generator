@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
-import * as os from 'os';
 import { promisify } from 'util';
 import { URL } from 'url';
 
@@ -104,7 +103,7 @@ export default class TypeGenerator {
 
     let tmpPath: string;
     try {
-      tmpPath = os.tmpdir();
+      tmpPath = await utils.createTmp();
     } catch (err) {
       throw new Error(`Could not create temp dir: ${err.message}`);
     }

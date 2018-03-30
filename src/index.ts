@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
-import * as os from 'os';
 import { promisify } from 'util';
 import { URL } from 'url';
 
@@ -59,6 +58,7 @@ export default class TypeGenerator {
   private constants: Array<libsodiumConstant>;
   private libsodiumVersion = '0.7.3';
   private sourceIsSet = false;
+  private tmpDir = '';
 
   private readonly additionalSymbols: Array<
     libsodiumSymbol
@@ -102,19 +102,18 @@ export default class TypeGenerator {
       `Downloading libsodium.js from "${this.externalLibsodiumSource}" ...`
     );
 
-    let tmpPath: string;
     try {
-      tmpPath = os.tmpdir();
+      this.tmpDir = await utils.createTmp();
     } catch (err) {
       throw new Error(`Could not create temp dir: ${err.message}`);
     }
     const zipURL = new URL(this.externalLibsodiumSource);
-    const downloadFileName = path.join(tmpPath, 'libsodium.zip');
+    const downloadFileName = path.join(this.tmpDir, 'libsodium.zip');
     const file = await utils.httpsGetFileAsync(zipURL, downloadFileName);
-    await decompress(file, tmpPath, { plugins: [decompressUnzip()] });
+    await decompress(file, this.tmpDir, { plugins: [decompressUnzip()] });
 
     const proposedSymbolSource = path.join(
-      tmpPath,
+      this.tmpDir,
       `libsodium.js-${this.libsodiumVersion}`
     );
 
@@ -347,6 +346,11 @@ export default class TypeGenerator {
 
     if (!this.sourceIsSet) {
       await promisify(rimraf)(this.libsodiumLocalSource);
+    }
+
+    if (this.tmpDir) {
+      await promisify(rimraf)(this.tmpDir);
+      this.tmpDir = '';
     }
 
     return this.outputFileOrDir;

@@ -90,9 +90,10 @@ const createTmp = (): Promise<string> =>
   new Promise((resolve, reject) =>
     tmp.dir((err, path) => {
       if (err || !path) {
-        return void reject(err || 'No path from tmp received.');
+        reject(err || 'No path from tmp received.');
+      } else {
+        resolve(path);
       }
-      return void resolve(path);
     })
   );
 

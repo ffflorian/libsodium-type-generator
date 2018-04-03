@@ -57,7 +57,7 @@ const additionalSymbols: Array<libsodiumSymbol> = [
     ],
     name: 'from_hex',
     noOutputFormat: true,
-    return: 'string',
+    return: 'Uint8Array',
     type: 'function'
   },
   {

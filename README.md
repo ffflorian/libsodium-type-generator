@@ -1,4 +1,4 @@
-# libsodium-type-generator [![Greenkeeper badge](https://badges.greenkeeper.io/ffflorian/libsodium-type-generator.svg)](https://greenkeeper.io/)
+# libsodium-type-generator [![Dependabot badge](https://img.shields.io/badge/Dependabot-active-brightgreen.svg)](https://dependabot.com/)
 
 This is a TypeScript declaration file generator for [`libsodium.js`](https://github.com/jedisct1/libsodium.js).
 

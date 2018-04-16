@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@types/decompress@4.2.1":
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/@types/decompress/-/decompress-4.2.1.tgz#28aa680af11c09058b22ebbc7fe443a0b22545a2"
+"@types/decompress@4.2.2":
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/@types/decompress/-/decompress-4.2.2.tgz#38a299e981862a898e5ac84eb1adc9329a0bad56"
   dependencies:
     "@types/node" "*"
 

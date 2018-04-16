@@ -13,7 +13,7 @@
     "tmp": "0.0.33"
   },
   "devDependencies": {
-    "@types/decompress": "4.2.1",
+    "@types/decompress": "4.2.2",
     "@types/node": "9.6.5",
     "@types/rimraf": "2.0.2",
     "@types/tmp": "0.0.33",

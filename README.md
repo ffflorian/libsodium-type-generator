@@ -28,7 +28,9 @@ Options:
 
 ### Example:
 ```
-libsodium-type-generator -o /path/to/libsodium.d.ts -b /path/to/libsodium.js
+curl -L https://github.com/jedisct1/libsodium.js/archive/master.tar.gz -o /path/to/libsodium.tar.gz
+tar -C /path/to/ -zxvf /path/to/libsodium.tar.gz
+libsodium-type-generator -o /path/to/libsodium.d.ts -b /path/to/libsodium.js-master/
 ```
 or
 ```

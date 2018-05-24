@@ -329,7 +329,9 @@ export default class TypeGenerator {
       this.libsodiumLocalSource = await this.downloadLibrary();
     }
 
-    await utils.checkSource(this.libsodiumLocalSource);
+    const version = await utils.checkSource(this.libsodiumLocalSource);
+
+    this.setDownloadVersion(version)
 
     const data = await this.buildData(sumo);
 

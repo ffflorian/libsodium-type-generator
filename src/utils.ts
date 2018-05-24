@@ -8,11 +8,13 @@ const decompress = require('decompress');
 const decompressUnzip = require('decompress-unzip');
 const https = require('follow-redirects/https');
 const log = require('single-line-log').stdout;
+const readFilePromise = promisify(fs.readFile);
 
-const checkSource = async (sourcePath: string): Promise<void> => {
+const checkSource = async (sourcePath: string): Promise<string> => {
   let symbolFiles: string[];
   const symbolPath = path.join(sourcePath, 'wrapper', 'symbols');
   const constantsFile = path.join(sourcePath, 'wrapper', 'constants.json');
+  const packageFile = path.join(sourcePath, 'package.json');
 
   try {
     symbolFiles = await promisify(fs.readdir)(symbolPath);
@@ -23,9 +25,7 @@ const checkSource = async (sourcePath: string): Promise<void> => {
   }
 
   try {
-    await promisify<Buffer>(cb => {
-      fs.readFile(constantsFile, cb);
-    });
+    await readFilePromise(constantsFile);
   } catch (error) {
     throw new Error(
       `Could not find constants file ${constantsFile} in downloaded ZIP file.`
@@ -34,6 +34,14 @@ const checkSource = async (sourcePath: string): Promise<void> => {
 
   if (!symbolFiles.some(fileName => /.*json/.test(fileName))) {
     throw new Error(`Could not find wrapper files in ${sourcePath}.`);
+  }
+
+  try {
+    const packageData = await readFilePromise(packageFile, 'utf8');
+    const jsonData = JSON.parse(packageData);
+    return jsonData.version;
+  } catch (error) {
+    throw new Error(`Error reading libsodium package file: ${error}`)
   }
 };
 

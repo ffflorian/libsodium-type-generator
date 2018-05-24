@@ -41,7 +41,7 @@ const checkSource = async (sourcePath: string): Promise<string> => {
     const jsonData = JSON.parse(packageData);
     return jsonData.version;
   } catch (error) {
-    throw new Error(`Error reading libsodium package file: ${error}`)
+    throw new Error(`Error reading libsodium package file: ${error}`);
   }
 };
 

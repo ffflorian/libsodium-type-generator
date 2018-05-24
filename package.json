@@ -36,5 +36,5 @@
     "test": "exit 0"
   },
   "types": "dist/index.d.ts",
-  "version": "2.2.3"
+  "version": "2.2.4"
 }

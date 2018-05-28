@@ -60,11 +60,11 @@ export default class TypeGenerator {
   private sourceIsSet = false;
   private tmpDir = '';
 
-  private readonly additionalSymbols: Array<
-    libsodiumSymbol
-  > = libsodiumTypes.additionalSymbols;
+  private readonly additionalSymbols: Array<libsodiumSymbol> =
+    libsodiumTypes.additionalSymbols;
   private readonly enums: libsodiumEnums = libsodiumTypes.enums;
-  private readonly genericTypes: libsodiumGenericTypes = libsodiumTypes.genericTypes;
+  private readonly genericTypes: libsodiumGenericTypes =
+    libsodiumTypes.genericTypes;
   private readonly types: libsodiumEnums = libsodiumTypes.types;
 
   /**

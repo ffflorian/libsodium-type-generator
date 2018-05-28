@@ -32,7 +32,7 @@
     "clear": "rimraf dist",
     "build": "tsc",
     "dist": "yarn-or-npm run clear && yarn-or-npm build",
-    "prettier": "prettier --single-quote --write src/*.ts",
+    "prettier": "prettier --write src/*.ts",
     "test": "exit 0"
   },
   "types": "dist/index.d.ts",

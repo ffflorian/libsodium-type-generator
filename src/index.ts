@@ -153,9 +153,7 @@ export default class TypeGenerator {
     );
 
     const constantsRaw = await promisify(fs.readFile)(filePath);
-    const constants: libsodiumConstant[] = JSON.parse(
-      constantsRaw.toString()
-    );
+    const constants: libsodiumConstant[] = JSON.parse(constantsRaw.toString());
 
     if (this.libsodiumVersion)
       constants.push({

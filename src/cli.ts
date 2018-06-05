@@ -46,7 +46,7 @@ generator
     console.log(
       `Success! The declaration file for libsodium.js v${generator.getVersion()}${
         program.sumo ? ' (sumo)' : ''
-      } is now available at "${outputFile}."`
+      } is now available at "${outputFile}".`
     )
   )
   .catch(error => console.error(error));

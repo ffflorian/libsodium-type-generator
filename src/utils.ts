@@ -52,7 +52,7 @@ const compareVersionNumbers = (version1: string, version2: string): number => {
 
   const isPositiveInteger = (x: string) => /^\d+$/.test(x);
 
-  const validateParts = (parts: Array<string>) => {
+  const validateParts = (parts: string[]) => {
     for (var i = 0; i < parts.length; ++i) {
       if (!isPositiveInteger(parts[i])) {
         return false;

@@ -1,6 +1,6 @@
 import { libsodiumSymbol } from './';
 
-const additionalSymbols: Array<libsodiumSymbol> = [
+const additionalSymbols: libsodiumSymbol[] = [
   {
     inputs: [
       {
@@ -136,6 +136,13 @@ const additionalSymbols: Array<libsodiumSymbol> = [
     name: 'pad',
     noOutputFormat: true,
     return: 'Uint8Array',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'symbols',
+    noOutputFormat: true,
+    return: 'string[]',
     type: 'function'
   },
   {

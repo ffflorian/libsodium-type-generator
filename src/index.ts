@@ -36,11 +36,11 @@ export interface libsodiumSymbol {
       or_else_throw: string;
     }
   ];
-  dependencies?: Array<string>;
-  inputs?: Array<libsodiumSymbolIO>;
+  dependencies?: string[];
+  inputs?: libsodiumSymbolIO[];
   name: string;
   noOutputFormat?: boolean;
-  outputs?: Array<libsodiumSymbolIO>;
+  outputs?: libsodiumSymbolIO[];
   return?: string;
   target?: string;
   type: 'function';
@@ -51,18 +51,16 @@ interface libsodiumGenericTypes {
 }
 
 interface libsodiumEnums {
-  [type: string]: Array<string>;
+  [type: string]: string[];
 }
 
 export default class TypeGenerator {
-  private constants: Array<libsodiumConstant>;
+  private constants: libsodiumConstant[];
   private libsodiumVersion = '0.7.3';
   private sourceIsSet = false;
   private tmpDir = '';
 
-  private readonly additionalSymbols: Array<
-    libsodiumSymbol
-  > = libsodiumTypes.additionalSymbols;
+  private readonly additionalSymbols: libsodiumSymbol[] = libsodiumTypes.additionalSymbols;
   private readonly enums: libsodiumEnums = libsodiumTypes.enums;
   private readonly genericTypes: libsodiumGenericTypes = libsodiumTypes.genericTypes;
   private readonly types: libsodiumEnums = libsodiumTypes.types;
@@ -124,7 +122,7 @@ export default class TypeGenerator {
     return this.libsodiumVersion;
   }
 
-  private async getFunctions(): Promise<Array<libsodiumSymbol>> {
+  private async getFunctions(): Promise<libsodiumSymbol[]> {
     const symbolPath = path.join(
       this.libsodiumLocalSource,
       'wrapper',
@@ -147,7 +145,7 @@ export default class TypeGenerator {
       .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   }
 
-  private async getConstants(): Promise<Array<libsodiumConstant>> {
+  private async getConstants(): Promise<libsodiumConstant[]> {
     const filePath = path.join(
       this.libsodiumLocalSource,
       'wrapper',
@@ -155,7 +153,7 @@ export default class TypeGenerator {
     );
 
     const constantsRaw = await promisify(fs.readFile)(filePath);
-    const constants: Array<libsodiumConstant> = JSON.parse(
+    const constants: libsodiumConstant[] = JSON.parse(
       constantsRaw.toString()
     );
 
@@ -217,7 +215,7 @@ export default class TypeGenerator {
 
   private async buildData(sumo?: boolean): Promise<string> {
     const getParameters = (
-      parameterArr: Array<libsodiumSymbolIO>,
+      parameterArr: libsodiumSymbolIO[],
       formattingAvailable: boolean
     ): string => {
       let parameters = '';

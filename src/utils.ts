@@ -140,7 +140,7 @@ const httpsGetFileAsync = (
               total = transferred / MEGABYTE;
             }
             elapsed = (Date.now() - startedAt) / 1000;
-            const percent = ((100.0 * transferred) / length).toFixed(2);
+            const percent = (100.0 * transferred / length).toFixed(2);
             const speed = transferred / elapsed;
             const speedFormatted =
               speed < MEGABYTE

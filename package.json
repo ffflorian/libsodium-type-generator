@@ -7,18 +7,18 @@
     "commander": "2.15.1",
     "decompress": "4.2.0",
     "decompress-unzip": "4.0.1",
-    "follow-redirects": "1.4.1",
+    "follow-redirects": "1.5.0",
     "rimraf": "2.6.2",
     "single-line-log": "1.1.2",
     "tmp": "0.0.33"
   },
   "devDependencies": {
     "@types/decompress": "4.2.2",
-    "@types/node": "10.1.0",
+    "@types/node": "10.3.0",
     "@types/rimraf": "2.0.2",
     "@types/tmp": "0.0.33",
-    "prettier": "1.12.1",
-    "typescript": "2.8.3",
+    "prettier": "1.13.4",
+    "typescript": "2.9.1",
     "yarn-or-npm": "2.0.4"
   },
   "files": [
@@ -32,9 +32,9 @@
     "clear": "rimraf dist",
     "build": "tsc",
     "dist": "yarn-or-npm run clear && yarn-or-npm build",
-    "prettier": "prettier --single-quote --write src/*.ts",
+    "prettier": "prettier --write src/*.ts",
     "test": "exit 0"
   },
   "types": "dist/index.d.ts",
-  "version": "2.2.1"
+  "version": "2.2.4"
 }

@@ -1,4 +1,4 @@
-# libsodium-type-generator [![Dependabot badge](https://img.shields.io/badge/Dependabot-active-brightgreen.svg)](https://dependabot.com/)
+# libsodium-type-generator [![Travis CI Build Status](https://api.travis-ci.org/ffflorian/libsodium-type-generator.svg?branch=master)](https://travis-ci.org/ffflorian/libsodium-type-generator) [![Dependabot badge](https://img.shields.io/badge/Dependabot-active-brightgreen.svg)](https://dependabot.com/)
 
 This is a TypeScript declaration file generator for [`libsodium.js`](https://github.com/jedisct1/libsodium.js).
 

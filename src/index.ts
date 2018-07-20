@@ -65,10 +65,6 @@ export default class TypeGenerator {
   private readonly genericTypes: libsodiumGenericTypes = libsodiumTypes.genericTypes;
   private readonly types: libsodiumEnums = libsodiumTypes.types;
 
-  /**
-   * @param outputFileOrDir Where to write the libsodium.js declaration file
-   * @param libsodiumLocalSource The source of the libsodium.js library (local path)
-   */
   constructor(
     public outputFileOrDir: string,
     private libsodiumLocalSource?: string
@@ -237,11 +233,16 @@ export default class TypeGenerator {
         this.libsodiumVersion
       }\n` +
       '// Project: https://github.com/jedisct1/libsodium.js\n' +
-      '// Definitions by: Florian Keller <https://github.com/ffflorian>\n\n' +
-      `declare module 'libsodium-wrappers${sumo ? '-sumo' : ''}' {\n`;
+      '// Definitions by: Florian Keller <https://github.com/ffflorian>\n\n';
+      //`declare module 'libsodium-wrappers${sumo ? '-sumo' : ''}' {\n`;
+
+    if (sumo) {
+      data += '/// <reference types="libsodium-wrappers" />\n\n' +
+      `export * from 'libsodium-wrappers';\n\n`
+    }
 
     Object.keys(this.types).forEach(typeName => {
-      data += `  type ${typeName} = `;
+      data += `export type ${typeName} = `;
       this.types[typeName].forEach((typeValue, index) => {
         const isLast = index === this.types[typeName].length - 1;
         data += typeValue + (isLast ? ';' : ' | ');
@@ -252,7 +253,7 @@ export default class TypeGenerator {
     data += '\n';
 
     Object.keys(this.enums).forEach(enumName => {
-      data += `  enum ${enumName} {\n`;
+      data += `export enum ${enumName} {\n`;
       this.enums[enumName].forEach(
         enumValue => (data += `    ${enumValue},\n`)
       );
@@ -260,7 +261,7 @@ export default class TypeGenerator {
     });
 
     Object.keys(this.genericTypes).forEach(typeName => {
-      data += `  interface ${typeName} {\n`;
+      data += `export interface ${typeName} {\n`;
       this.genericTypes[typeName].forEach(({ name, type }) => {
         data += `    ${name}: ${type};\n`;
       });
@@ -269,7 +270,11 @@ export default class TypeGenerator {
 
     let constants = await this.getConstants();
 
-    if (!sumo) {
+    if (sumo) {
+      constants = constants.filter(
+        constant => sumoOnlySymbols.includes(constant.name.toLowerCase())
+      );
+    } else {
       constants = constants.filter(
         constant => !sumoOnlySymbols.includes(constant.name.toLowerCase())
       );
@@ -277,14 +282,18 @@ export default class TypeGenerator {
 
     constants.forEach(constant => {
       const convertedType = this.convertType(constant.type);
-      data += `  const ${constant.name}: ${convertedType};\n`;
+      data += `export const ${constant.name}: ${convertedType};\n`;
     });
 
     data += '\n';
 
     let functions = await this.getFunctions();
 
-    if (!sumo) {
+    if (sumo) {
+      functions = functions.filter(
+        func => sumoOnlySymbols.includes(func.name.toLowerCase())
+      );
+    } else {
       functions = functions.filter(
         func => !sumoOnlySymbols.includes(func.name.toLowerCase())
       );
@@ -302,20 +311,20 @@ export default class TypeGenerator {
 
       if (typeof returnType === 'object') {
         data +=
-          `  function ${fn.name}` +
+          `export function ${fn.name}` +
           `(${inputs}outputFormat?: Uint8ArrayOutputFormat | null): ` +
           returnType.binaryType +
           ';\n' +
-          `  function ${fn.name}` +
+          `export function ${fn.name}` +
           `(${inputs}outputFormat: StringOutputFormat | null): ` +
           returnType.stringType +
           ';\n';
       } else {
-        data += `  function ${fn.name}(${inputs}): ${returnType};\n`;
+        data += `export function ${fn.name}(${inputs}): ${returnType};\n`;
       }
     });
 
-    return data + '}';
+    return data;
   }
 
   public async generate(sumo?: boolean): Promise<string> {

@@ -171,7 +171,7 @@ export default class TypeGenerator {
         return 'Uint8Array';
       case 'unsized_buf':
       case 'unsized_buf_optional':
-        return 'string | Uint8Array | undefined';
+        return 'string | Uint8Array';
       default:
         return type;
     }
@@ -191,6 +191,12 @@ export default class TypeGenerator {
       type.startsWith('_format_output({sharedRx: sharedRx, sharedTx: sharedTx}')
     ) {
       return { binaryType: 'CryptoKX', stringType: 'StringCryptoKX' };
+    }
+    if (type === '{ state: state_address, header: _format_output(header, outputFormat) }') {
+      return { binaryType: '{ state: state_address, header: Uint8Array }', stringType: '{ state: state_address, header: string }'}
+    }
+    if (type === 'ret && {message: _format_output(ret.message, outputFormat), tag: ret.tag}') {
+      return { binaryType: '{ message: Uint8Array; tag: Uint8Array }', stringType: '{ message: string; tag: Uint8Array }' };
     }
     if (type === 'random_value') {
       return 'number';
@@ -212,20 +218,21 @@ export default class TypeGenerator {
       parameterArr: libsodiumSymbolIO[],
       formattingAvailable: boolean
     ): string => {
-      let parameters = '';
-      parameterArr.forEach((param, index) => {
+      const includesOptionalParameter = parameterArr.filter(param =>
+        param.optional || param.type.includes('optional')
+      ).length >= 1;
+      return parameterArr.reduce((parameters, currentParameter, index) => {
         const isLast = index === parameterArr.length - 1;
-        const convertedType = this.convertType(param.type);
-        const optional = param.type.includes('optional');
+        const convertedType = this.convertType(currentParameter.type);
+        const nullable = currentParameter.type.includes('optional');
 
-        parameters +=
-          `${param.name}: ` +
+        return parameters +
+          currentParameter.name +
+          (includesOptionalParameter ? '?' : '') + ': ' +
           convertedType +
-          (optional ? ' | null' : '') +
+          (nullable ? ' | null' : '') +
           (isLast && !formattingAvailable ? '' : ', ');
-      });
-
-      return parameters;
+      }, '');
     };
 
     let data =
@@ -316,7 +323,7 @@ export default class TypeGenerator {
           returnType.binaryType +
           ';\n' +
           `export function ${fn.name}` +
-          `(${inputs}outputFormat: StringOutputFormat | null): ` +
+          `(${inputs}outputFormat?: StringOutputFormat | null): ` +
           returnType.stringType +
           ';\n';
       } else {

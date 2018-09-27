@@ -1,14 +1,10 @@
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as http from 'http';
 import * as tmp from 'tmp';
-import { promisify } from 'util';
 
-const decompress = require('decompress');
-const decompressUnzip = require('decompress-unzip');
+import { stdout as log } from 'single-line-log';
 const https = require('follow-redirects/https');
-const log = require('single-line-log').stdout;
-const readFilePromise = promisify(fs.readFile);
 
 const checkSource = async (sourcePath: string): Promise<string> => {
   let symbolFiles: string[];
@@ -17,7 +13,7 @@ const checkSource = async (sourcePath: string): Promise<string> => {
   const packageFile = path.join(sourcePath, 'package.json');
 
   try {
-    symbolFiles = await promisify(fs.readdir)(symbolPath);
+    symbolFiles = await fs.readdir(symbolPath);
   } catch (error) {
     throw new Error(
       `Could not find symbols in ${symbolPath} from downloaded ZIP file.`
@@ -25,7 +21,7 @@ const checkSource = async (sourcePath: string): Promise<string> => {
   }
 
   try {
-    await readFilePromise(constantsFile);
+    await fs.readFile(constantsFile);
   } catch (error) {
     throw new Error(
       `Could not find constants file ${constantsFile} in downloaded ZIP file.`
@@ -37,7 +33,7 @@ const checkSource = async (sourcePath: string): Promise<string> => {
   }
 
   try {
-    const packageData = await readFilePromise(packageFile, 'utf8');
+    const packageData = await fs.readFile(packageFile, 'utf8');
     const jsonData = JSON.parse(packageData);
     return jsonData.version;
   } catch (error) {
@@ -93,17 +89,6 @@ const compareVersionNumbers = (version1: string, version2: string): number => {
 
   return 0;
 };
-
-const createTmp = (): Promise<string> =>
-  new Promise((resolve, reject) =>
-    tmp.dir((err, path) => {
-      if (err || !path) {
-        reject(err || 'No path from tmp received.');
-      } else {
-        resolve(path);
-      }
-    })
-  );
 
 const httpsGetFileAsync = (
   url: URL,
@@ -166,4 +151,4 @@ const httpsGetFileAsync = (
   });
 };
 
-export { checkSource, compareVersionNumbers, createTmp, httpsGetFileAsync };
+export { checkSource, compareVersionNumbers, httpsGetFileAsync };

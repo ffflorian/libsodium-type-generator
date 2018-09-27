@@ -38,7 +38,7 @@ const generator = new TypeGenerator(program.output, program.base);
 if (program.setversion) {
   if (program.base) {
     console.info(
-      "Info: When setting a base path, the version parameter doesn't have any effect."
+      'Info: When setting a base path, the version parameter has no effect.'
     );
   } else {
     generator.setDownloadVersion(program.setversion).catch(error => {

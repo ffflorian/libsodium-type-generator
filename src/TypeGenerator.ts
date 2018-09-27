@@ -1,8 +1,7 @@
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
+import * as os from 'os';
 import * as path from 'path';
-import * as rimraf from 'rimraf';
 import * as decompress from 'decompress';
-import { promisify } from 'util';
 import { URL } from 'url';
 
 const decompressUnzip = require('decompress-unzip');
@@ -67,7 +66,8 @@ export default class TypeGenerator {
     );
 
     try {
-      this.tmpDir = await utils.createTmp();
+      const osTmpDir = os.tmpdir();
+      this.tmpDir = await fs.mkdtemp(path.join(osTmpDir, 'ltg-'));
     } catch (err) {
       throw new Error(`Could not create temp dir: ${err.message}`);
     }
@@ -95,14 +95,20 @@ export default class TypeGenerator {
       'symbols'
     );
 
-    const symbolFiles = await promisify(fs.readdir)(symbolPath);
+    const symbolFiles = await fs.readdir(symbolPath);
 
     const symbols = await Promise.all(
       symbolFiles.map(async symbolFile => {
-        const symbolRaw = await promisify(fs.readFile)(
-          path.join(symbolPath, symbolFile)
-        );
-        return <libsodiumSymbol>JSON.parse(symbolRaw.toString());
+        const symbolRaw = await fs.readFile(path.join(symbolPath, symbolFile), {
+          encoding: 'utf-8'
+        });
+        try {
+          return JSON.parse(symbolRaw) as libsodiumSymbol;
+        } catch (error) {
+          throw new Error(
+            `Could not parse "${path.join(symbolPath, symbolFile)}": ${error.message}`
+          );
+        }
       })
     );
 
@@ -118,7 +124,7 @@ export default class TypeGenerator {
       'constants.json'
     );
 
-    const constantsRaw = await promisify(fs.readFile)(filePath);
+    const constantsRaw = await fs.readFile(filePath, { encoding: 'utf-8' });
     const constants: libsodiumConstant[] = JSON.parse(constantsRaw.toString());
 
     if (this.libsodiumVersion)
@@ -297,23 +303,21 @@ export default class TypeGenerator {
 
     const data = await this.buildData(sumo);
 
-    const outputFileOrDirStats = await promisify(fs.lstat)(
-      this.outputFileOrDir
-    );
+    const outputFileOrDirStats = await fs.lstat(this.outputFileOrDir);
 
     if (outputFileOrDirStats.isDirectory()) {
       const fileName = `libsodium-wrappers${sumo ? '-sumo' : ''}.d.ts`;
       this.outputFileOrDir = path.resolve(this.outputFileOrDir, fileName);
     }
 
-    await promisify(fs.writeFile)(this.outputFileOrDir, data);
+    await fs.writeFile(this.outputFileOrDir, data);
 
     if (!this.sourceIsSet) {
-      await promisify(rimraf)(this.libsodiumLocalSource);
+      await fs.remove(this.libsodiumLocalSource);
     }
 
     if (this.tmpDir) {
-      await promisify(rimraf)(this.tmpDir);
+      await fs.remove(this.tmpDir);
       this.tmpDir = '';
     }
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import TypeGenerator from './';
+import TypeGenerator from './TypeGenerator';
 import program = require('commander');
 
-const { description, name, version } = require('../package.json');
+const { description, name, version }: {description: string, name: string, version: string} = require('../package.json');
 
 program
   .name(name)
@@ -35,7 +35,7 @@ if (program.setversion) {
   } else {
     generator.setDownloadVersion(program.setversion).catch(error => {
       console.error(error);
-      process.exit();
+      process.exit(1);
     });
   }
 }
@@ -49,4 +49,7 @@ generator
       } is now available at "${outputFile}".`
     )
   )
-  .catch(error => console.error(error));
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });

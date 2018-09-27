@@ -1,4 +1,4 @@
-import { libsodiumSymbol } from './';
+import { libsodiumSymbol } from './interfaces';
 
 const additionalSymbols: libsodiumSymbol[] = [
   {

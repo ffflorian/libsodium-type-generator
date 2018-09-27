@@ -10,7 +10,14 @@ const decompressUnzip = require('decompress-unzip');
 import libsodiumTypes from './libsodiumTypes';
 import sumoOnlySymbols from './sumoOnlySymbols';
 import * as utils from './utils';
-import { libsodiumSymbol, libsodiumEnums, libsodiumGenericTypes, libsodiumConstant, FormattableReturnType, libsodiumSymbolIO } from './interfaces';
+import {
+  libsodiumSymbol,
+  libsodiumEnums,
+  libsodiumGenericTypes,
+  libsodiumConstant,
+  FormattableReturnType,
+  libsodiumSymbolIO
+} from './interfaces';
 
 export default class TypeGenerator {
   private libsodiumVersion = '0.7.3';

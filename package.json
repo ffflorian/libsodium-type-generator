@@ -14,7 +14,7 @@
   "devDependencies": {
     "@types/decompress": "4.2.3",
     "@types/fs-extra": "5.0.4",
-    "@types/node": "10.12.8",
+    "@types/node": "10.12.9",
     "@types/single-line-log": "1.1.0",
     "prettier": "1.15.2",
     "rimraf": "2.6.2",

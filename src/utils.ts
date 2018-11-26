@@ -1,7 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as http from 'http';
-import * as tmp from 'tmp';
 
 import { stdout as log } from 'single-line-log';
 const https = require('follow-redirects/https');

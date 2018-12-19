@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import TypeGenerator from './TypeGenerator';
 import program = require('commander');
+import TypeGenerator from './TypeGenerator';
 
 const {
   description,

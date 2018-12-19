@@ -1,22 +1,22 @@
+import * as decompress from 'decompress';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import * as decompress from 'decompress';
 import { URL } from 'url';
 
 const decompressUnzip = require('decompress-unzip');
 
+import {
+  FormattableReturnType,
+  libsodiumConstant,
+  libsodiumEnums,
+  libsodiumGenericTypes,
+  libsodiumSymbol,
+  libsodiumSymbolIO
+} from './interfaces';
 import libsodiumTypes from './libsodiumTypes';
 import sumoOnlySymbols from './sumoOnlySymbols';
 import * as utils from './utils';
-import {
-  libsodiumSymbol,
-  libsodiumEnums,
-  libsodiumGenericTypes,
-  libsodiumConstant,
-  FormattableReturnType,
-  libsodiumSymbolIO
-} from './interfaces';
 
 export default class TypeGenerator {
   private libsodiumVersion = '0.7.3';
@@ -106,7 +106,9 @@ export default class TypeGenerator {
           return JSON.parse(symbolRaw) as libsodiumSymbol;
         } catch (error) {
           throw new Error(
-            `Could not parse "${path.join(symbolPath, symbolFile)}": ${error.message}`
+            `Could not parse "${path.join(symbolPath, symbolFile)}": ${
+              error.message
+            }`
           );
         }
       })
@@ -127,14 +129,15 @@ export default class TypeGenerator {
     const constantsRaw = await fs.readFile(filePath, { encoding: 'utf-8' });
     const constants: libsodiumConstant[] = JSON.parse(constantsRaw.toString());
 
-    if (this.libsodiumVersion)
+    if (this.libsodiumVersion) {
       constants.push({
         name: 'ready',
         type: 'Promise<void>'
       });
+    }
 
-    return constants.sort(
-      (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
+    return constants.sort((a, b) =>
+      a.name < b.name ? -1 : a.name > b.name ? 1 : 0
     );
   }
 
@@ -299,7 +302,7 @@ export default class TypeGenerator {
 
     const version = await utils.checkSource(this.libsodiumLocalSource);
 
-    this.setDownloadVersion(version);
+    await this.setDownloadVersion(version);
 
     const data = await this.buildData(sumo);
 

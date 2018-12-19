@@ -208,31 +208,31 @@ const genericTypes = {
     { name: 'ciphertext', type: 'Uint8Array' },
     { name: 'mac', type: 'Uint8Array' }
   ],
-  StringCryptoBox: [
-    { name: 'ciphertext', type: 'string' },
-    { name: 'mac', type: 'string' }
-  ],
   CryptoKX: [
     { name: 'sharedRx', type: 'Uint8Array' },
     { name: 'sharedTx', type: 'Uint8Array' }
-  ],
-  StringCryptoKX: [
-    { name: 'sharedRx', type: 'string' },
-    { name: 'sharedTx', type: 'string' }
   ],
   KeyPair: [
     { name: 'keyType', type: 'KeyType' },
     { name: 'privateKey', type: 'Uint8Array' },
     { name: 'publicKey', type: 'Uint8Array' }
   ],
+  SecretBox: [
+    { name: 'cipher', type: 'Uint8Array' },
+    { name: 'mac', type: 'Uint8Array' }
+  ],
+  StringCryptoBox: [
+    { name: 'ciphertext', type: 'string' },
+    { name: 'mac', type: 'string' }
+  ],
+  StringCryptoKX: [
+    { name: 'sharedRx', type: 'string' },
+    { name: 'sharedTx', type: 'string' }
+  ],
   StringKeyPair: [
     { name: 'keyType', type: 'KeyType' },
     { name: 'privateKey', type: 'string' },
     { name: 'publicKey', type: 'string' }
-  ],
-  SecretBox: [
-    { name: 'cipher', type: 'Uint8Array' },
-    { name: 'mac', type: 'Uint8Array' }
   ],
   StringSecretBox: [
     { name: 'cipher', type: 'string' },
@@ -240,11 +240,11 @@ const genericTypes = {
   ],
   generichash_state_address: [{ name: 'name', type: 'string' }],
   onetimeauth_state_address: [{ name: 'name', type: 'string' }],
-  state_address: [{ name: 'name', type: 'string' }],
   secretstream_xchacha20poly1305_state_address: [
     { name: 'name', type: 'string' }
   ],
-  sign_state_address: [{ name: 'name', type: 'string' }]
+  sign_state_address: [{ name: 'name', type: 'string' }],
+  state_address: [{ name: 'name', type: 'string' }]
 };
 
 const enums = {
@@ -257,9 +257,9 @@ const enums = {
 };
 
 const types = {
-  Uint8ArrayOutputFormat: [`'uint8array'`],
+  KeyType: [`'curve25519'`, `'ed25519'`, `'x25519'`],
   StringOutputFormat: [`'text'`, `'hex'`, `'base64'`],
-  KeyType: [`'curve25519'`, `'ed25519'`, `'x25519'`]
+  Uint8ArrayOutputFormat: [`'uint8array'`]
 };
 
 export default { additionalSymbols, genericTypes, enums, types };

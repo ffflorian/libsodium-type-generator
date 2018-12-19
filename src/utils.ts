@@ -1,6 +1,6 @@
 import * as fs from 'fs-extra';
-import * as path from 'path';
 import * as http from 'http';
+import * as path from 'path';
 
 import { stdout as log } from 'single-line-log';
 const https = require('follow-redirects/https');
@@ -50,13 +50,13 @@ const checkSource = async (sourcePath: string): Promise<string> => {
  *  Taken from http://stackoverflow.com/a/6832721/11236.
  */
 const compareVersionNumbers = (version1: string, version2: string): number => {
-  var v1parts = version1.split('.');
-  var v2parts = version2.split('.');
+  const v1parts = version1.split('.');
+  const v2parts = version2.split('.');
 
   const isPositiveInteger = (x: string) => /^\d+$/.test(x);
 
   const validateParts = (parts: string[]) => {
-    for (var i = 0; i < parts.length; ++i) {
+    for (let i = 0; i < parts.length; ++i) {
       if (!isPositiveInteger(parts[i])) {
         return false;
       }
@@ -68,7 +68,7 @@ const compareVersionNumbers = (version1: string, version2: string): number => {
     return NaN;
   }
 
-  for (var i = 0; i < v1parts.length; ++i) {
+  for (let i = 0; i < v1parts.length; ++i) {
     if (v2parts.length === i) {
       return 1;
     }
@@ -76,9 +76,11 @@ const compareVersionNumbers = (version1: string, version2: string): number => {
     if (v1parts[i] === v2parts[i]) {
       continue;
     }
+
     if (v1parts[i] > v2parts[i]) {
       return 1;
     }
+
     return -1;
   }
 

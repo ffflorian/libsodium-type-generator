@@ -17,7 +17,7 @@
     "@types/node": "10.12.8",
     "@types/single-line-log": "1.1.0",
     "prettier": "1.15.3",
-    "rimraf": "2.6.2",
+    "rimraf": "2.6.3",
     "ts-node": "7.0.1",
     "tslint": "5.12.0",
     "tslint-config-prettier": "1.17.0",

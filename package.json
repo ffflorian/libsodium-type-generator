@@ -7,7 +7,7 @@
     "commander": "2.19.0",
     "decompress": "4.2.0",
     "decompress-unzip": "4.0.1",
-    "follow-redirects": "1.5.10",
+    "follow-redirects": "1.6.1",
     "fs-extra": "7.0.1",
     "single-line-log": "1.1.2"
   },

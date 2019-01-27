@@ -41,19 +41,6 @@ export default class TypeGenerator {
     this.outputFileOrDir = path.resolve(this.outputFileOrDir);
   }
 
-  public async setDownloadVersion(version: string): Promise<TypeGenerator> {
-    const comparison = utils.compareVersionNumbers(
-      version,
-      this.libsodiumVersion
-    );
-    if (isNaN(comparison) || comparison < 0) {
-      throw new Error(`Minimum version is ${this.libsodiumVersion}.`);
-    }
-
-    this.libsodiumVersion = version;
-    return this;
-  }
-
   private get externalLibsodiumSource(): string {
     return `https://github.com/jedisct1/libsodium.js/archive/${
       this.libsodiumVersion
@@ -301,8 +288,6 @@ export default class TypeGenerator {
     }
 
     const version = await utils.checkSource(this.libsodiumLocalSource);
-
-    await this.setDownloadVersion(version);
 
     const data = await this.buildData(sumo);
 

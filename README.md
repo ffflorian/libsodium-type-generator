@@ -1,6 +1,8 @@
-# libsodium-type-generator [![Travis CI Build Status](https://api.travis-ci.org/ffflorian/libsodium-type-generator.svg?branch=master)](https://travis-ci.org/ffflorian/libsodium-type-generator) [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=ffflorian/libsodium-type-generator)](https://dependabot.com)
+# libsodium-type-generator [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=ffflorian/libsodium-type-generator)](https://dependabot.com)
 
-This is a TypeScript declaration file generator for [`libsodium.js`](https://github.com/jedisct1/libsodium.js).
+This is a TypeScript declaration file generator for [`libsodium.js`](https://github.com/jedisct1/libsodium.js) 0.7.3.
+
+The types for version 0.7.3 were merged to DefinitelyTyped and [published on npm](https://www.npmjs.com/package/@types/libsodium-wrappers). Other versions are not supported (yet).
 
 
 ## Installation
@@ -22,7 +24,6 @@ Options:
   -o, --output <file|dir>     Specify the output file or directory (required)
   -b, --base <path>           Specify the libsodium.js base path
   -s, --sumo                  Generate types for the sumo version
-  -v, --setversion <version>  Set the version for the libsodium.js download (default is 0.7.3)
   -h, --help                  output usage information
 ```
 

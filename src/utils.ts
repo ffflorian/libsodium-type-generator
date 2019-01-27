@@ -40,61 +40,9 @@ const checkSource = async (sourcePath: string): Promise<string> => {
   }
 };
 
-/**
- * Compare two software version numbers (e.g. 1.7.1)
- * Returns:
- *
- *  `0` if they're identical, negative if `v1` < `v2`,
- *  positive if `v1` > `v2`, `NaN` if they're in the wrong format.
- *
- *  Taken from http://stackoverflow.com/a/6832721/11236.
- */
-const compareVersionNumbers = (version1: string, version2: string): number => {
-  const v1parts = version1.split('.');
-  const v2parts = version2.split('.');
-
-  const isPositiveInteger = (x: string) => /^\d+$/.test(x);
-
-  const validateParts = (parts: string[]) => {
-    for (let i = 0; i < parts.length; ++i) {
-      if (!isPositiveInteger(parts[i])) {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  if (!validateParts(v1parts) || !validateParts(v2parts)) {
-    return NaN;
-  }
-
-  for (let i = 0; i < v1parts.length; ++i) {
-    if (v2parts.length === i) {
-      return 1;
-    }
-
-    if (v1parts[i] === v2parts[i]) {
-      continue;
-    }
-
-    if (v1parts[i] > v2parts[i]) {
-      return 1;
-    }
-
-    return -1;
-  }
-
-  if (v1parts.length != v2parts.length) {
-    return -1;
-  }
-
-  return 0;
-};
-
 const httpsGetFileAsync = (
   url: URL,
-  fileName: string,
-  showProgress = false
+  fileName: string
 ): Promise<string> => {
   const MEGABYTE = 0x100000;
   const KILOBYTE = 0x400;
@@ -152,4 +100,4 @@ const httpsGetFileAsync = (
   });
 };
 
-export { checkSource, compareVersionNumbers, httpsGetFileAsync };
+export { checkSource, httpsGetFileAsync };

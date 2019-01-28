@@ -40,10 +40,7 @@ const checkSource = async (sourcePath: string): Promise<string> => {
   }
 };
 
-const httpsGetFileAsync = (
-  url: URL,
-  fileName: string
-): Promise<string> => {
+const httpsGetFileAsync = (url: URL, fileName: string): Promise<string> => {
   const MEGABYTE = 0x100000;
   const KILOBYTE = 0x400;
   let startedAt: number;

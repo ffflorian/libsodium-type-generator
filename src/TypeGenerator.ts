@@ -19,7 +19,7 @@ import sumoOnlySymbols from './sumoOnlySymbols';
 import * as utils from './utils';
 
 export default class TypeGenerator {
-  private libsodiumVersion = '0.7.3';
+  private readonly libsodiumVersion = '0.7.3';
   private sourceIsSet = false;
   private tmpDir = '';
 
